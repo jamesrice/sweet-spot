@@ -1,0 +1,29 @@
+{
+	"name": "crunch-time",
+	"main": "worker/index.js",
+	"compatibility_date": "2025-10-01",
+	"observability": {
+		"enabled": true
+	},
+
+	// The game is plain static files with no build step. Only ./public is
+	// served — keeping the site in its own directory means the Worker can
+	// never hand out worker source, wrangler.jsonc, the README or scripts/.
+	// run_worker_first keeps /api/* on the Worker; everything else is assets.
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		"run_worker_first": ["/api/*"]
+	},
+
+	// Live Crunch Legends board. Its own namespace (CRUNCHTIME_SCORES) so it
+	// never merges with Loop De Drop's LOOPDEDROP_SCORES. The binding stays
+	// SCORES, which is what worker/scores.js reads. Never add "remote": true —
+	// local dev must not touch production data.
+	"kv_namespaces": [
+		{
+			"binding": "SCORES",
+			"id": "71c309420f98433bae101662e732ea23"
+		}
+	]
+}

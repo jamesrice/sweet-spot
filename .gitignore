@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+.wrangler/
+.dev.vars
+
+# Desktop font sources never ship. Only the converted webfont files
+# (.woff2/.woff) belong in public/assets/fonts — the Worker serves every file
+# under public/ to anyone who guesses the URL.
+*.otf
+*.ttf

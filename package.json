@@ -1,0 +1,11 @@
+{
+  "name": "crunch-time",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Crunch Time — No Ordinary Apple. One Bite. Timing Matters. A SweeTango timing arcade game.",
+  "scripts": {
+    "dev": "python3 scripts/dev-server.py 8799",
+    "dev:worker": "wrangler dev",
+    "deploy": "wrangler deploy"
+  }
+}

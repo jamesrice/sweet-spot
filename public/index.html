@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crunch Time | No Ordinary Apple. One Bite. Timing Matters.</title>
+<link rel="icon" href="./assets/img/favicon.png">
+<meta name="description" content="A SweeTango apple sweeps the loop. Tap to bite inside the sweet spot. Miss once and the run is over.">
+<meta name="theme-color" content="#FFCCA2">
+<meta property="og:title" content="Crunch Time">
+<meta property="og:description" content="No Ordinary Apple. One Bite. Timing Matters.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="./assets/img/apple-top.webp">
+<link rel="preload" as="image" href="./assets/img/apple-slices.webp">
+<style>
+  /* Gilroy (UI) + Recoleta (display) — the pairing sweetango.com itself uses.
+     Both are licensed webfonts self-hosted here; if the Recoleta files are
+     ever pulled, Fraunces stands in through the font stack. */
+  @font-face { font-family: "Gilroy"; src: url("./assets/fonts/Gilroy-Regular.woff2") format("woff2"), url("./assets/fonts/Gilroy-Regular.woff") format("woff"); font-weight: 400; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Gilroy"; src: url("./assets/fonts/Gilroy-Medium.woff2") format("woff2"), url("./assets/fonts/Gilroy-Medium.woff") format("woff"); font-weight: 500; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Gilroy"; src: url("./assets/fonts/Gilroy-Bold.woff2") format("woff2"), url("./assets/fonts/Gilroy-Bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Gilroy"; src: url("./assets/fonts/Gilroy-Black.woff2") format("woff2"), url("./assets/fonts/Gilroy-Black.woff") format("woff"); font-weight: 900; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Recoleta"; src: url("./assets/fonts/Recoleta-Bold.woff2") format("woff2"), url("./assets/fonts/Recoleta-Bold.woff") format("woff"); font-weight: 700; font-style: normal; font-display: swap; }
+  @font-face { font-family: "Recoleta"; src: url("./assets/fonts/Recoleta-Black.woff2") format("woff2"), url("./assets/fonts/Recoleta-Black.woff") format("woff"); font-weight: 900; font-style: normal; font-display: swap; }
+
+  :root {
+    --green: #005544;
+    --green-deep: #0b2211;
+    --lime: #E3FF96;
+    --red: #AA111B;
+    --peach: #FFCCA2;
+    --panel: rgba(255,255,255,.56);
+    --edge: 1px solid rgba(0,85,68,.14);
+    --glass: blur(16px) saturate(1.25);
+    --display: "Recoleta", "Fraunces", Georgia, "Times New Roman", serif;
+    --ui: "Gilroy", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  html, body {
+    margin: 0; height: 100%; overflow: hidden; background: var(--peach);
+    font-family: var(--ui); font-weight: 500; color: var(--green);
+    touch-action: none; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ---------- scenery ---------- */
+  #bg { position: fixed; inset: 0; z-index: 0; }
+  .grad { position: absolute; inset: 0; background: linear-gradient(160deg, #FFCCA2 0%, #F7FF96 100%); }
+  #gradB { opacity: 0; }
+
+  #props { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+  .propWrap { position: absolute; will-change: transform; animation: floatA 7s ease-in-out infinite alternate; }
+  .propWrap.a { top: 3%; left: -8%; width: clamp(150px, 36vw, 330px); }
+  .propWrap.b { bottom: 5%; right: -9%; width: clamp(160px, 40vw, 360px); animation: floatB 9s ease-in-out infinite alternate; }
+  .prop { width: 100%; height: auto; display: block;
+    filter: drop-shadow(0 22px 34px rgba(0,85,68,.20));
+    transition: opacity .42s ease, transform .42s cubic-bezier(.2,.9,.3,1.15); }
+  .prop.out { opacity: 0; transform: scale(.84) rotate(-5deg); }
+  @keyframes floatA { from { transform: translate3d(0,0,0) rotate(-2deg); } to { transform: translate3d(8px,-16px,0) rotate(3deg); } }
+  @keyframes floatB { from { transform: translate3d(0,0,0) rotate(2deg); } to { transform: translate3d(-10px,14px,0) rotate(-3deg); } }
+  /* During a run the props step back so the ring owns the frame. */
+  body[data-screen="play"] .prop { opacity: .88; }
+  body[data-screen="play"] .prop.out { opacity: 0; }
+
+  canvas { display: block; position: fixed; inset: 0; z-index: 2; touch-action: none; }
+
+  h1, h2, .stat b, .big, .tally b, #toastName, #scoreVal, #comboVal {
+    font-family: var(--display); font-weight: 900;
+  }
+
+  #ui { position: fixed; inset: 0; z-index: 3; pointer-events: none; display: flex; flex-direction: column; }
+  .screen {
+    position: absolute; inset: 0; pointer-events: auto; overflow-y: auto;
+    -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y;
+    display: flex; flex-direction: column; align-items: center;
+    padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+    box-sizing: border-box;
+  }
+  .screen[hidden] { display: none; }
+  .veil { background: radial-gradient(ellipse at 50% 46%, rgba(255,255,255,.50), rgba(255,255,255,.04) 72%); }
+
+  .panel {
+    background: var(--panel); border: var(--edge); border-radius: 20px;
+    backdrop-filter: var(--glass); -webkit-backdrop-filter: var(--glass);
+    box-shadow: 0 10px 30px rgba(0,85,68,.10), inset 0 1px 0 rgba(255,255,255,.7);
+  }
+
+  /* ---------- home ---------- */
+  #home { justify-content: center; gap: 14px; }
+  .stack { width: min(440px, 100%); display: flex; flex-direction: column; gap: 12px; margin: auto 0; }
+  .logo { width: 156px; height: auto; display: block; margin: 0 auto 4px;
+    filter: drop-shadow(0 2px 10px rgba(255,255,255,.7)); }
+  h1 {
+    margin: 0; text-align: center; font-size: clamp(46px, 13vw, 68px); line-height: .94;
+    letter-spacing: -.012em; color: var(--green);
+    text-shadow: 0 2px 18px rgba(255,255,255,.55);
+  }
+  .tag { text-align: center; font-size: 15px; font-weight: 700; letter-spacing: .01em; margin: 2px 0 6px;
+    color: var(--green); opacity: .9; text-wrap: balance; }
+
+  .statsTitle { font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; font-weight: 900;
+    color: var(--green); opacity: .7; margin: 4px 0 -4px 6px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat { padding: 12px 6px 12px; text-align: center; }
+  .stat span { display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+    font-weight: 700; opacity: .68; margin-bottom: 3px; }
+  .stat b { display: block; font-size: 27px; line-height: 1.05; color: var(--green); font-variant-numeric: tabular-nums; }
+
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; box-sizing: border-box; padding: 16px 20px; border-radius: 999px;
+    border: 2px solid var(--green); cursor: pointer; font-family: var(--ui);
+    font-size: 16px; letter-spacing: .14em; font-weight: 900; color: var(--lime);
+    background: var(--green); text-decoration: none;
+    box-shadow: 0 10px 26px rgba(0,85,68,.28), inset 0 1px 0 rgba(255,255,255,.12);
+    transition: transform .14s cubic-bezier(.2,.9,.3,1.2), box-shadow .14s ease, background .14s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(0,85,68,.32); background: #006b56; }
+  .btn:active { transform: scale(.98); }
+  .btn:focus-visible { outline: 3px solid var(--lime); outline-offset: 2px; }
+  .btn.ghost { background: rgba(255,255,255,.55); color: var(--green); border-color: rgba(0,85,68,.32);
+    box-shadow: none; font-size: 13px; padding: 12px 18px; letter-spacing: .12em;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .btn.ghost:hover { background: rgba(255,255,255,.78); }
+  .btn.small { font-size: 13px; padding: 10px 16px; }
+  .btn.taste { background: var(--lime); color: var(--green); border-color: var(--lime);
+    box-shadow: 0 8px 22px rgba(227,255,150,.55); font-size: 14px; padding: 13px 18px; }
+  .btn.taste:hover { background: #eeffb0; }
+  .btn.taste .arrow { font-size: 15px; transition: transform .16s ease; }
+  .btn.taste:hover .arrow { transform: translate(2px,-2px); }
+  .btnRow { display: flex; gap: 9px; }
+  .btnRow .btn { flex: 1; }
+
+  .foot { width: min(440px, 100%); text-align: center; display: flex; flex-direction: column; gap: 8px;
+    align-items: center; padding-top: 6px; }
+  .foot .tm { font-size: 9.5px; opacity: .55; line-height: 1.4; max-width: 340px; }
+  .foot .of { display: inline-flex; align-items: center; gap: 8px; color: var(--green); opacity: .62;
+    text-decoration: none; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700;
+    transition: opacity .15s ease; }
+  .foot .of:hover { opacity: 1; }
+  .foot .of svg { height: 11px; width: auto; display: block; }
+
+  /* ---------- hud ---------- */
+  #hud { position: absolute; inset: 0; pointer-events: none; }
+  #hud[hidden] { display: none; }
+  #scoreWrap { position: absolute; top: max(14px, env(safe-area-inset-top)); left: 50%;
+    transform: translateX(-50%); text-align: center; text-shadow: 0 2px 14px rgba(255,255,255,.75); }
+  #scoreWrap .k { font-size: 10px; letter-spacing: .28em; font-weight: 900; opacity: .7; }
+  #scoreVal { font-size: 48px; line-height: 1; color: var(--green); font-variant-numeric: tabular-nums; }
+  #scoreWrap .b { font-size: 11.5px; font-weight: 700; opacity: .7; margin-top: 2px; }
+  #pacePill { display: inline-block; margin-top: 7px; padding: 5px 11px; border-radius: 999px;
+    background: var(--green); color: var(--lime); font-size: 9.5px; letter-spacing: .2em;
+    text-transform: uppercase; font-weight: 900; text-shadow: none; white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(0,85,68,.25); }
+  #pacePill.pop { animation: pillPop .7s cubic-bezier(.2,1.4,.4,1); }
+  @keyframes pillPop { 0% { transform: scale(.8); background: var(--lime); color: var(--green); }
+    35% { transform: scale(1.14); } 100% { transform: scale(1); } }
+  #comboWrap { position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px; text-align: right;
+    text-shadow: 0 2px 12px rgba(255,255,255,.75); }
+  #comboWrap .k { font-size: 9.5px; letter-spacing: .22em; font-weight: 900; opacity: .7; }
+  #comboVal { font-size: 26px; line-height: 1.1; }
+  .iconBtn { position: absolute; width: 42px; height: 42px; border-radius: 14px; cursor: pointer;
+    pointer-events: auto; border: 1.5px solid rgba(0,85,68,.28); font-size: 18px;
+    display: flex; align-items: center; justify-content: center; color: var(--green);
+    background: rgba(255,255,255,.62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: transform .12s ease; }
+  .iconBtn:hover { transform: scale(1.08); }
+  #homeBtn { top: max(16px, env(safe-area-inset-top)); left: 16px; }
+  #muteBtn { bottom: calc(max(22px, env(safe-area-inset-bottom)) + 76px); right: 16px; }
+
+  #tapBar { position: absolute; left: 50%; transform: translateX(-50%);
+    bottom: max(22px, env(safe-area-inset-bottom)); width: min(520px, calc(100% - 32px));
+    padding: 15px 16px; text-align: center; font-size: 14px; letter-spacing: .22em; font-weight: 900;
+    border-radius: 999px; border: var(--edge); background: rgba(255,255,255,.62);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    animation: breathe 2s ease-in-out infinite; }
+  @keyframes breathe { 50% { opacity: .62; } }
+  #tapBar .hint { display: block; font-size: 10.5px; letter-spacing: .08em; font-weight: 500;
+    opacity: .7; margin-top: 4px; }
+
+  /* ---------- toast ---------- */
+  /* The lingo toast sits just under the ring — --ring-bottom is set from the
+     engine's resize() so it tracks the real ring on every viewport. */
+  #toast { position: absolute; left: 50%; top: calc(var(--ring-bottom, 62%) + 22px); transform: translateX(-50%);
+    text-align: center; opacity: 0; pointer-events: none; white-space: nowrap; }
+  #toast.pop { animation: toastPop 1.4s cubic-bezier(.2,1.2,.4,1) forwards; }
+  @keyframes toastPop {
+    0% { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(.8) rotate(-2deg); }
+    18% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.08) rotate(1deg); }
+    30% { transform: translateX(-50%) scale(1) rotate(0); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(12px) scale(.97); }
+  }
+  #toastFx { display: none; margin: 0 auto 6px; padding: 4px 10px; border-radius: 999px; width: max-content;
+    background: var(--red); color: #fff; font-size: 9.5px; letter-spacing: .22em; font-weight: 900;
+    text-transform: uppercase; box-shadow: 0 6px 14px rgba(170,17,27,.3); }
+  #toast.perf #toastFx { display: block; }
+  #toastName { font-size: 38px; line-height: 1; color: var(--green); letter-spacing: -.01em;
+    text-shadow: 0 2px 16px rgba(255,255,255,.85); }
+  #toast.perf #toastName { color: var(--red); font-size: 44px; }
+  #toastPts { font-size: 13px; font-weight: 900; color: var(--green); margin-top: 4px;
+    text-shadow: 0 1px 10px rgba(255,255,255,.9); }
+
+  /* ---------- tutorial / results / board ---------- */
+  #tut, #results, #board { justify-content: center; }
+  .sheet { width: min(430px, 100%); padding: 24px 22px; text-align: center; margin: auto 0; }
+  .sheet h2 { margin: 6px 0 6px; font-size: 30px; line-height: 1; }
+  .sheet p { margin: 0 0 4px; font-size: 14.5px; line-height: 1.6; opacity: .92; text-wrap: pretty; }
+  .steps { font-size: 10.5px; letter-spacing: .2em; font-weight: 900; opacity: .65; }
+  .dots { display: flex; gap: 7px; justify-content: center; margin: 14px 0 16px; }
+  .dots i { width: 7px; height: 7px; border-radius: 999px; background: rgba(0,85,68,.22); transition: all .2s; }
+  .dots i.on { width: 22px; background: var(--green); }
+  [hidden] { display: none !important; }
+  .link { display: inline-block; margin-top: 12px; font-size: 12.5px; opacity: .75; font-weight: 700;
+    color: var(--green); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; pointer-events: auto; }
+  .link:hover { opacity: 1; }
+
+  .big { font-size: 68px; line-height: 1; color: var(--green); font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 14px rgba(255,255,255,.7); margin: 2px 0; }
+  .runline { font-size: 10.5px; letter-spacing: .28em; text-transform: uppercase; font-weight: 900; opacity: .7; }
+  .newBest { color: var(--red); font-size: 13.5px; font-weight: 900; margin-top: 4px; letter-spacing: .04em; }
+  .tallies { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0 4px; }
+  .tally { background: rgba(0,85,68,.08); border-radius: 14px; padding: 10px 4px; }
+  .tally b { display: block; font-size: 22px; line-height: 1.1; }
+  .tally span { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; opacity: .75; }
+  .initials { display: flex; gap: 9px; justify-content: center; margin: 14px 0 4px; }
+  .initials input { width: 118px; font-size: 24px; text-transform: uppercase; text-align: center;
+    letter-spacing: .3em; border-radius: 14px; border: 2px solid rgba(0,85,68,.35);
+    background: rgba(255,255,255,.7); color: var(--green); padding: 9px 4px 9px 14px; font-weight: 900;
+    outline: none; font-family: var(--ui); touch-action: manipulation; }
+  .initials input::placeholder { color: rgba(0,85,68,.35); }
+  .initials input:focus { border-color: var(--green); box-shadow: 0 0 0 4px rgba(227,255,150,.7); }
+  .craving { margin-top: 14px; font-size: 12.5px; font-weight: 700; opacity: .85; }
+  .craving a { color: var(--green); font-weight: 900; letter-spacing: .08em; text-decoration: underline;
+    text-underline-offset: 3px; margin-left: 4px; }
+  .rows { display: flex; flex-direction: column; gap: 5px; margin: 12px 0 4px; }
+  .row { display: grid; grid-template-columns: 26px 62px 1fr auto; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.55); font-size: 14px;
+    font-weight: 900; text-align: left; font-variant-numeric: tabular-nums; }
+  .row.hl { background: var(--lime); }
+  .row .m { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; font-weight: 700; }
+  .empty { font-size: 13px; opacity: .8; padding: 14px 0; }
+  .sheet .btnRow { margin-top: 14px; }
+
+  @media (max-height: 680px) {
+    .logo { width: 120px; } h1 { font-size: 44px; } .stack { gap: 9px; }
+    .btn { padding: 13px 18px; } .stat b { font-size: 23px; } .foot .tm { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .propWrap, #tapBar { animation: none; }
+    .prop, .btn, .iconBtn { transition: none; }
+  }
+</style>
+</head>
+<body data-screen="home">
+<div id="bg" aria-hidden="true">
+  <div class="grad" id="gradA"></div>
+  <div class="grad" id="gradB"></div>
+</div>
+<div id="props" aria-hidden="true">
+  <div class="propWrap a"><img class="prop" id="propA" alt="" src="./assets/img/apple-top.webp" data-name="apple-top"></div>
+  <div class="propWrap b"><img class="prop" id="propB" alt="" src="./assets/img/apple-slices.webp" data-name="apple-slices"></div>
+</div>
+<canvas id="stage"></canvas>
+
+<div id="ui">
+  <!-- ============ HOME ============ -->
+  <section class="screen veil" id="home">
+    <div class="stack">
+      <img class="logo" src="./assets/img/sweetango-logo.svg" alt="SweeTango Apples">
+      <h1 id="titleText">Crunch Time</h1>
+      <div class="tag" id="tagText"></div>
+
+      <div class="statsTitle" id="statsTitle">Your Crunch Stats</div>
+      <div class="stats">
+        <div class="stat panel"><span id="kBest">Best score</span><b id="statBest">0</b></div>
+        <div class="stat panel"><span id="kBites">Longest run</span><b id="statBites">0</b></div>
+        <div class="stat panel"><span id="kPerfects">Best perfects</span><b id="statPerfects">0</b></div>
+      </div>
+
+      <button class="btn" id="playBtn">PLAY</button>
+
+      <div class="btnRow">
+        <button class="btn ghost" id="howBtn">❓ HOW TO PLAY</button>
+        <button class="btn ghost" id="boardBtn">🏆 CRUNCH LEGENDS</button>
+      </div>
+      <a class="btn taste" id="tasteBtn" href="https://sweetango.com/" target="_blank" rel="noopener">
+        <span>TASTE SWEETANGO</span><i class="arrow" aria-hidden="true">↗</i>
+      </a>
+    </div>
+
+    <div class="foot">
+      <div class="tm" id="trademark"></div>
+      <a class="of" href="https://fictiontribe.com" target="_blank" rel="noopener">
+        <span id="productOf">A product of</span>
+        <svg viewBox="0 0 227 28" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fiction Tribe">
+          <path d="M6.33063 5.6011V7.40413H18.0284V12.693H6.33063V17.1422H0V0.310516H18.0165V5.6011H6.33063Z" fill="currentColor"/>
+          <path d="M27.9832 17.0704H21.6543V0.240402H27.9832V17.0704Z" fill="currentColor"/>
+          <path d="M41.6131 0.00500488C48.4289 0.00500488 51.9839 2.36064 52.2527 7.67459H45.7767C45.5315 6.08692 44.2908 5.29391 41.6131 5.29391C37.8655 5.29391 37.2316 6.85655 37.2316 8.63287C37.2316 10.4092 37.8891 12.0236 41.6131 12.0236C44.2908 12.0236 45.5315 11.2055 45.7767 9.59449H52.2527C51.9839 14.9368 48.4543 17.3125 41.6131 17.3125C34.1144 17.3125 30.9009 14.4994 30.9009 8.6312C30.9009 2.76298 34.1144 0.00500488 41.6131 0.00500488Z" fill="currentColor"/>
+          <path d="M75.8611 5.52931H68.5568V17.0704H62.2278V5.52931H54.9235V0.240402H75.8611V5.52931Z" fill="currentColor"/>
+          <path d="M85.3477 17.0704H79.0188V0.240402H85.3477V17.0704Z" fill="currentColor"/>
+          <path d="M88.2637 8.63121C88.2637 2.78803 91.4755 0 98.9759 0C106.476 0 109.688 2.81307 109.688 8.63121C109.688 14.4493 106.449 17.3125 98.9759 17.3125C91.5025 17.3125 88.2637 14.4978 88.2637 8.63121ZM103.359 8.63121C103.359 6.87659 102.725 5.29225 98.9759 5.29225C95.2265 5.29225 94.5943 6.85488 94.5943 8.63121C94.5943 10.4075 95.2519 12.0219 98.9759 12.0219C102.7 12.0219 103.359 10.4109 103.359 8.63121Z" fill="currentColor"/>
+          <path d="M134.804 0.240402L134.875 6.33734L123.438 13.4126L119.176 7.14036V17.0337L116.845 17.0754H112.846V0.240402H121.129L128.482 10.1705V0.240402H134.804Z" fill="currentColor"/>
+          <path d="M148.732 15.8985H141.429V27.4396H135.1V15.8985H127.399L136.01 10.6079H148.73V15.8985H148.732Z" fill="currentColor"/>
+          <path d="M168.784 22.6064L171.803 27.4396H164.304L161.937 23.4963H158.218V27.4396H151.888V10.6079H165.278C169.149 10.6079 171.803 13.3007 171.803 17.0521C171.803 19.5045 170.658 21.5246 168.784 22.6064ZM158.218 18.2073H164.061C164.694 18.2073 165.472 18.2073 165.472 17.0521C165.472 15.8968 164.694 15.8985 164.061 15.8985H158.218V18.2073Z" fill="currentColor"/>
+          <path d="M181.289 27.4396H174.96V10.6079H181.289V27.4396Z" fill="currentColor"/>
+          <path d="M205.834 22.4628C205.834 25.2275 204.154 27.4396 200.283 27.4396H184.702V10.6079H199.554C203.424 10.6079 204.626 12.3408 204.626 14.8884C204.626 15.9702 204.118 17.0771 203.287 18.0387C204.754 19.0955 205.834 20.6348 205.834 22.4628ZM191.023 16.5329H196.875C197.509 16.5329 198.286 16.5329 198.286 15.618C198.286 14.7031 197.509 14.7048 196.875 14.7048H191.031L191.023 16.5329ZM199.497 21.9904C199.497 21.1005 198.718 21.1005 198.084 21.1005H191.023V22.8769H198.084C198.718 22.8769 199.497 22.8769 199.497 21.982V21.9904Z" fill="currentColor"/>
+          <path d="M215.314 15.4176V16.9803H227V21.0672H215.314V22.6315H227V27.4396H208.984V10.6079H227V15.4176H215.314Z" fill="currentColor"/>
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ TUTORIAL ============ -->
+  <section class="screen veil" id="tut" hidden>
+    <div class="sheet panel">
+      <div class="steps" id="tutStep">1 / 3</div>
+      <h2 id="tutTitle"></h2>
+      <p id="tutBody"></p>
+      <div class="dots" id="tutDots"></div>
+      <button class="btn" id="tutNext">Next</button>
+      <div class="link" id="tutSkip">Skip</div>
+    </div>
+  </section>
+
+  <!-- ============ HUD ============ -->
+  <div id="hud" hidden>
+    <div id="scoreWrap">
+      <div class="k" id="kScore">SCORE</div>
+      <div id="scoreVal">0</div>
+      <div class="b" id="hudBest">Best 0</div>
+      <div id="pacePill">Warm-up · Crisp</div>
+    </div>
+    <div id="comboWrap">
+      <div class="k" id="kCombo">COMBO</div>
+      <div id="comboVal">x0</div>
+    </div>
+    <div class="iconBtn" id="homeBtn" role="button" aria-label="Home">⌂</div>
+    <div class="iconBtn" id="muteBtn" role="button" aria-label="Mute">🔊</div>
+    <div id="tapBar">TAP TO BITE<span class="hint">Tap, click, or hit Space</span></div>
+    <div id="toast"><div id="toastFx">PERFECT BITE</div><div id="toastName"></div><div id="toastPts"></div></div>
+  </div>
+
+  <!-- ============ RESULTS ============ -->
+  <section class="screen veil" id="results" hidden>
+    <div class="sheet panel">
+      <div class="runline" id="runOverText"></div>
+      <div class="newBest" id="newBestText" hidden></div>
+      <div class="big" id="finalScore">0</div>
+      <div class="tallies">
+        <div class="tally"><b id="tBites">0</b><span id="kBitesRun">Bites</span></div>
+        <div class="tally"><b id="tPerf">0</b><span id="kPerf">Perfects</span></div>
+      </div>
+      <div class="initials">
+        <input id="initials" maxlength="3" placeholder="YOU" aria-label="Your initials" autocomplete="off" autocapitalize="characters">
+        <button class="btn small" id="postBtn" style="width:auto">POST</button>
+      </div>
+      <div class="btnRow">
+        <button class="btn" id="againBtn">BITE AGAIN</button>
+      </div>
+      <div class="btnRow">
+        <button class="btn ghost" id="backBtn">HOME</button>
+      </div>
+      <div class="craving"><span id="cravingText"></span><a id="tasteLink" href="https://sweetango.com/" target="_blank" rel="noopener">TASTE SWEETANGO</a> ↗</div>
+    </div>
+  </section>
+
+  <!-- ============ LEADERBOARD ============ -->
+  <section class="screen veil" id="board" hidden>
+    <div class="sheet panel">
+      <h2 id="boardTitle">Crunch Legends</h2>
+      <div class="rows" id="boardRows"></div>
+      <button class="btn ghost" id="boardClose">CLOSE</button>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
