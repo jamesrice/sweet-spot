@@ -172,11 +172,15 @@
     text-transform: uppercase; font-weight: 900; text-shadow: none; white-space: nowrap;
     box-shadow: 0 6px 16px rgba(0,85,68,.25); }
   #pacePill.pop { animation: pillPop .7s cubic-bezier(.2,1.4,.4,1); }
-  #stageLine { margin: 10px auto 0; max-width: min(340px, 78vw); font-family: var(--display); font-weight: 900;
-    font-size: 17px; line-height: 1.25; color: var(--green); opacity: 0; transform: translateY(-6px);
-    transition: opacity .35s ease, transform .35s ease; text-wrap: balance; white-space: normal;
-    text-shadow: 0 2px 14px rgba(255,255,255,.9); }
-  #stageLine.show { opacity: 1; transform: translateY(0); }
+  /* Milestone copy sits in the lower third of the ring's interior, above
+     the combo readout the canvas draws near the bottom edge. */
+  #stageLine { position: absolute; left: 50%; top: calc(var(--ring-center, 42%) + var(--ring-r, 130px) * 0.48);
+    width: calc(var(--ring-r, 130px) * 1.36); transform: translate(-50%, calc(-50% - 6px));
+    text-align: center; font-family: var(--display); font-weight: 900;
+    font-size: clamp(13px, 3.6vw, 17px); line-height: 1.2; color: var(--green); opacity: 0;
+    transition: opacity .35s ease, transform .35s ease; text-wrap: balance;
+    text-shadow: 0 2px 14px rgba(255,255,255,.95), 0 0 24px rgba(255,255,255,.8); }
+  #stageLine.show { opacity: 1; transform: translate(-50%, -50%); }
   @keyframes pillPop { 0% { transform: scale(.8); background: var(--lime); color: var(--green); }
     35% { transform: scale(1.14); } 100% { transform: scale(1); } }
   #comboWrap { position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px; text-align: right;
@@ -340,8 +344,8 @@
       <div id="scoreVal">0</div>
       <div class="b" id="hudBest">Best 0</div>
       <div id="pacePill">Warm-up · Crisp</div>
-      <div id="stageLine"></div>
     </div>
+    <div id="stageLine"></div>
     <div id="comboWrap">
       <div class="k" id="kCombo">COMBO</div>
       <div id="comboVal">x0</div>

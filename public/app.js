@@ -376,6 +376,7 @@ addEventListener("keydown", (e) => {
 Loop.on("layout", ({ cy, R }) => {
   document.documentElement.style.setProperty("--ring-bottom", `${Math.round(cy + R)}px`);
   document.documentElement.style.setProperty("--ring-center", `${Math.round(cy)}px`);
+  document.documentElement.style.setProperty("--ring-r", `${Math.round(R)}px`);
 });
 Loop.init($("stage"));
 Loop.muted = Meta.data.muted;

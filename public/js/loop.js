@@ -378,9 +378,9 @@ export const Loop = {
         c.save();
         c.textAlign = "center"; c.textBaseline = "middle";
         c.fillStyle = PAL.green;
-        c.font = `900 ${Math.round(R * 0.26)}px Recoleta, Fraunces, Georgia, serif`;
+        c.font = `900 ${Math.round(R * 0.2)}px Recoleta, Fraunces, Georgia, serif`;
         c.shadowColor = "rgba(255,255,255,0.85)"; c.shadowBlur = 14;
-        c.fillText(`x${this.combo}`, this.cx, this.cy + R * 0.66);
+        c.fillText(`x${this.combo}`, this.cx, this.cy + R * 0.78);
         c.restore();
       }
     } else {

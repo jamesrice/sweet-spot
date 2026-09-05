@@ -62,7 +62,7 @@ export const STR = {
     },
     {
       title: "Nail the core",
-      body: "Anywhere in the sweet spot counts. Land in the bright centre for a PERFECT BITE — 15 extra, before your multiplier. Perfects in a row build your combo.",
+      body: "Anywhere in the sweet spot counts. Land in the bright center for a PERFECT BITE — 15 extra, before your multiplier. Perfects in a row build your combo.",
     },
     {
       title: "Timing matters",

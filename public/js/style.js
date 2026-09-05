@@ -91,7 +91,7 @@ export const MILESTONES = [
   "Still crunching? Legend.",                            // back to Crisp after a full cycle
   "Big crunch. Sweet bite.",                              // → Zesty (7)
   "Finishes with a zing.",                                // → Honey Sweet (14)
-  "The kind of fruit that turns a snack into a moment.",  // → Zingy (21)
+  "Turns a snack into a moment.",                         // → Zingy (21)
   "One bite and you'll get it.",                          // → Brown Sugary (28)
   "No ordinary apple.",                                   // → One-of-a-kind (35)
 ];
