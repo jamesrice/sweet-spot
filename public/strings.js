@@ -45,7 +45,9 @@ export const STR = {
 
   howToPlay: "HOW TO PLAY",
   lbTitle: "Crunch Legends",
+  lbSub: "Global top 10 · every player, every device",
   lbEmpty: "No legends yet — take the first bite!",
+  lbOffline: "Offline — showing this device only",
   lbBites: "bites",
   close: "CLOSE",
   next: "Next",

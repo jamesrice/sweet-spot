@@ -1,12 +1,12 @@
 // Crunch Legends — backed by Workers KV (binding SCORES).
 //
-// GET  /api/scores            -> [{n, s, b, t}, ...]  all-time top 8
-// POST /api/scores {n, s, b}  -> updated top 8      (initials, score, bites)
+// GET  /api/scores            -> [{n, s, b, t}, ...]  all-time global top 10
+// POST /api/scores {n, s, b}  -> updated top 10     (initials, score, bites)
 //
 // The client falls back to a localStorage board whenever this is unreachable.
 
 const BOARD = "board.v1";
-const MAX = 8;
+const MAX = 10;
 
 const json = (data, status = 200) =>
   new Response(JSON.stringify(data), {

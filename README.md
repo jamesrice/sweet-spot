@@ -98,7 +98,7 @@ count toward any of them.
 
 `worker/scores.js` backs the **Crunch Legends** board with Workers KV (binding
 `SCORES`, namespace `SWEETSPOT_SCORES`). `GET /api/scores` returns the
-all-time top 8; `POST` takes `{n, s, b}` (3-char initials, score, bites).
+all-time global top 10; `POST` takes `{n, s, b}` (3-char initials, score, bites).
 
 The client falls back to a localStorage board whenever the API is unreachable,
 which includes `npm run dev` — the python dev server is static-only, so

@@ -270,6 +270,8 @@
   .row.hl { background: var(--lime); }
   .row .m { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; font-weight: 700; }
   .empty { font-size: 13px; opacity: .8; padding: 14px 0; }
+  .lbSub { font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; font-weight: 900; opacity: .65; margin-top: 2px; }
+  .lbSub.off { color: var(--red); opacity: .9; }
   .sheet .btnRow { margin-top: 14px; }
 
   @media (max-height: 680px) {
@@ -388,6 +390,7 @@
   <section class="screen veil" id="board" hidden>
     <div class="sheet panel">
       <h2 id="boardTitle">Crunch Legends</h2>
+      <div class="lbSub" id="boardSub"></div>
       <div class="rows" id="boardRows"></div>
       <button class="btn ghost" id="boardClose">CLOSE</button>
     </div>

@@ -51,6 +51,7 @@ $("tasteLink").textContent = STR.taste;
 $("findBtn").href = STR.findUrl;
 $("findBtn").querySelector("span").textContent = STR.findNearYou;
 $("boardTitle").textContent = STR.lbTitle;
+$("boardSub").textContent = STR.lbSub;
 $("boardClose").textContent = STR.close;
 $("tutSkip").textContent = STR.skip;
 $("tapBar").firstChild.textContent = STR.tapToBite;
@@ -252,18 +253,24 @@ function prepareShare(run) {
 }
 
 /* ---------------- leaderboard ---------------- */
+// The board is global (Workers KV). Only when the API is unreachable —
+// offline, or the static dev server — do we fall back to this device's own
+// board, and we say so, so an empty global board never gets mistaken for a
+// populated local one (or vice versa).
 async function fetchBoard() {
   try {
     const r = await fetch("/api/scores", { cache: "no-store" });
     if (!r.ok) throw new Error("no api");
     const rows = await r.json();
-    if (Array.isArray(rows) && rows.length) return rows;
+    if (Array.isArray(rows)) return { rows, live: true };
   } catch (e) { /* local fallback below */ }
-  return Meta.data.board;
+  return { rows: Meta.data.board, live: false };
 }
 
 async function paintBoard(highlight) {
-  const rows = await fetchBoard();
+  const { rows, live } = await fetchBoard();
+  $("boardSub").textContent = live ? STR.lbSub : STR.lbOffline;
+  $("boardSub").classList.toggle("off", !live);
   const host = $("boardRows");
   host.innerHTML = "";
   if (!rows.length) {
@@ -289,12 +296,17 @@ $("postBtn").addEventListener("click", async () => {
   const row = { n: name, s: lastRun.score, b: lastRun.locks };
   Meta.submit(name, lastRun);
   try {
-    await fetch("/api/scores", {
+    const r = await fetch("/api/scores", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(row),
     });
-  } catch (e) { /* offline: the local board already has it */ }
+    if (!r.ok) throw new Error("post failed");
+  } catch (e) {
+    // Offline: the local board already has it. Re-arm POST so a retry can
+    // still reach the global board once the connection is back.
+    posted = false;
+  }
   await paintBoard(row);
   show("board");
 });

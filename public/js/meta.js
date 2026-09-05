@@ -41,7 +41,7 @@ export const Meta = {
 
   submit(name, run) {
     const row = { n: (name || "YOU").slice(0, 3).toUpperCase(), s: run.score, b: run.locks, t: Date.now() };
-    this.data.board = [...this.data.board, row].sort((a, b) => b.s - a.s).slice(0, 8);
+    this.data.board = [...this.data.board, row].sort((a, b) => b.s - a.s).slice(0, 10);
     this.save();
     return this.data.board;
   },
