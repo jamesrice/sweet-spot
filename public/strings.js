@@ -37,6 +37,8 @@ export const STR = {
   home: "Home",
   share: "SHARE",
   shareTitle: "Crunch Time",
+  shareHeadline: "It's Crunch Time!",
+  shareCloser: "No Ordinary Apple.",
   shareText: "I scored {s} in Crunch Time — {b} bites of SweeTango. No Ordinary Apple. One Bite. Timing Matters.",
   shared: "SHARED!",
   saved: "SAVED!",

@@ -115,7 +115,7 @@
   @media (max-width: 380px) { .season { font-size: 10px; letter-spacing: .1em; } }
 
   .statsTitle { font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; font-weight: 900;
-    color: var(--green); opacity: .7; margin: 4px 0 -4px 6px; }
+    color: var(--green); opacity: .7; margin: 4px 0 -4px; text-align: center; }
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .stat { padding: 12px 6px 12px; text-align: center; }
   .stat span { display: block; font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
@@ -153,7 +153,7 @@
   .foot { width: min(440px, 100%); text-align: center; display: flex; flex-direction: column; gap: 8px;
     align-items: center; padding-top: 6px; }
   .foot .tm { font-size: 9.5px; opacity: .55; line-height: 1.4; max-width: 340px; }
-  .foot .of { display: inline-flex; align-items: center; gap: 8px; color: var(--green); opacity: .62;
+  .foot .of { display: none; align-items: center; gap: 8px; color: var(--green); opacity: .62;
     text-decoration: none; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700;
     transition: opacity .15s ease; }
   .foot .of:hover { opacity: 1; }
@@ -205,23 +205,25 @@
   /* ---------- toast ---------- */
   /* The lingo toast sits just under the ring — --ring-bottom is set from the
      engine's resize() so it tracks the real ring on every viewport. */
-  #toast { position: absolute; left: 50%; top: calc(var(--ring-bottom, 62%) + 22px); transform: translateX(-50%);
+  #toast { position: absolute; left: 50%; top: var(--ring-center, 42%); transform: translate(-50%, -50%);
     text-align: center; opacity: 0; pointer-events: none; white-space: nowrap; }
   #toast.pop { animation: toastPop 1.4s cubic-bezier(.2,1.2,.4,1) forwards; }
   @keyframes toastPop {
-    0% { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(.8) rotate(-2deg); }
-    18% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.08) rotate(1deg); }
-    30% { transform: translateX(-50%) scale(1) rotate(0); }
+    0% { opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.8) rotate(-2deg); }
+    18% { opacity: 1; transform: translate(-50%, -50%) scale(1.08) rotate(1deg); }
+    30% { transform: translate(-50%, -50%) scale(1) rotate(0); }
     75% { opacity: 1; }
-    100% { opacity: 0; transform: translateX(-50%) translateY(12px) scale(.97); }
+    100% { opacity: 0; transform: translate(-50%, calc(-50% - 10px)) scale(.97); }
   }
   #toastFx { display: none; margin: 0 auto 6px; padding: 4px 10px; border-radius: 999px; width: max-content;
     background: var(--red); color: #fff; font-size: 9.5px; letter-spacing: .22em; font-weight: 900;
     text-transform: uppercase; box-shadow: 0 6px 14px rgba(170,17,27,.3); }
   #toast.perf #toastFx { display: block; }
-  #toastName { font-size: 38px; line-height: 1; color: var(--green); letter-spacing: -.01em;
-    text-shadow: 0 2px 16px rgba(255,255,255,.85); }
-  #toast.perf #toastName { color: var(--red); font-size: 44px; }
+  /* Sized to sit inside the ring: the longest word ("One-of-a-kind!") must
+     clear the track on a 390px phone. */
+  #toastName { font-size: clamp(20px, 6.4vw, 36px); line-height: 1; color: var(--green); letter-spacing: -.01em;
+    text-shadow: 0 2px 16px rgba(255,255,255,.9), 0 0 30px rgba(255,255,255,.8); }
+  #toast.perf #toastName { color: var(--red); font-size: clamp(22px, 7vw, 40px); }
   #toastPts { font-size: 13px; font-weight: 900; color: var(--green); margin-top: 4px;
     text-shadow: 0 1px 10px rgba(255,255,255,.9); }
 
@@ -316,23 +318,6 @@
 
     <div class="foot">
       <div class="tm" id="trademark"></div>
-      <a class="of" href="https://fictiontribe.com" target="_blank" rel="noopener">
-        <span id="productOf">A product of</span>
-        <svg viewBox="0 0 227 28" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fiction Tribe">
-          <path d="M6.33063 5.6011V7.40413H18.0284V12.693H6.33063V17.1422H0V0.310516H18.0165V5.6011H6.33063Z" fill="currentColor"/>
-          <path d="M27.9832 17.0704H21.6543V0.240402H27.9832V17.0704Z" fill="currentColor"/>
-          <path d="M41.6131 0.00500488C48.4289 0.00500488 51.9839 2.36064 52.2527 7.67459H45.7767C45.5315 6.08692 44.2908 5.29391 41.6131 5.29391C37.8655 5.29391 37.2316 6.85655 37.2316 8.63287C37.2316 10.4092 37.8891 12.0236 41.6131 12.0236C44.2908 12.0236 45.5315 11.2055 45.7767 9.59449H52.2527C51.9839 14.9368 48.4543 17.3125 41.6131 17.3125C34.1144 17.3125 30.9009 14.4994 30.9009 8.6312C30.9009 2.76298 34.1144 0.00500488 41.6131 0.00500488Z" fill="currentColor"/>
-          <path d="M75.8611 5.52931H68.5568V17.0704H62.2278V5.52931H54.9235V0.240402H75.8611V5.52931Z" fill="currentColor"/>
-          <path d="M85.3477 17.0704H79.0188V0.240402H85.3477V17.0704Z" fill="currentColor"/>
-          <path d="M88.2637 8.63121C88.2637 2.78803 91.4755 0 98.9759 0C106.476 0 109.688 2.81307 109.688 8.63121C109.688 14.4493 106.449 17.3125 98.9759 17.3125C91.5025 17.3125 88.2637 14.4978 88.2637 8.63121ZM103.359 8.63121C103.359 6.87659 102.725 5.29225 98.9759 5.29225C95.2265 5.29225 94.5943 6.85488 94.5943 8.63121C94.5943 10.4075 95.2519 12.0219 98.9759 12.0219C102.7 12.0219 103.359 10.4109 103.359 8.63121Z" fill="currentColor"/>
-          <path d="M134.804 0.240402L134.875 6.33734L123.438 13.4126L119.176 7.14036V17.0337L116.845 17.0754H112.846V0.240402H121.129L128.482 10.1705V0.240402H134.804Z" fill="currentColor"/>
-          <path d="M148.732 15.8985H141.429V27.4396H135.1V15.8985H127.399L136.01 10.6079H148.73V15.8985H148.732Z" fill="currentColor"/>
-          <path d="M168.784 22.6064L171.803 27.4396H164.304L161.937 23.4963H158.218V27.4396H151.888V10.6079H165.278C169.149 10.6079 171.803 13.3007 171.803 17.0521C171.803 19.5045 170.658 21.5246 168.784 22.6064ZM158.218 18.2073H164.061C164.694 18.2073 165.472 18.2073 165.472 17.0521C165.472 15.8968 164.694 15.8985 164.061 15.8985H158.218V18.2073Z" fill="currentColor"/>
-          <path d="M181.289 27.4396H174.96V10.6079H181.289V27.4396Z" fill="currentColor"/>
-          <path d="M205.834 22.4628C205.834 25.2275 204.154 27.4396 200.283 27.4396H184.702V10.6079H199.554C203.424 10.6079 204.626 12.3408 204.626 14.8884C204.626 15.9702 204.118 17.0771 203.287 18.0387C204.754 19.0955 205.834 20.6348 205.834 22.4628ZM191.023 16.5329H196.875C197.509 16.5329 198.286 16.5329 198.286 15.618C198.286 14.7031 197.509 14.7048 196.875 14.7048H191.031L191.023 16.5329ZM199.497 21.9904C199.497 21.1005 198.718 21.1005 198.084 21.1005H191.023V22.8769H198.084C198.718 22.8769 199.497 22.8769 199.497 21.982V21.9904Z" fill="currentColor"/>
-          <path d="M215.314 15.4176V16.9803H227V21.0672H215.314V22.6315H227V27.4396H208.984V10.6079H227V15.4176H215.314Z" fill="currentColor"/>
-        </svg>
-      </a>
     </div>
   </section>
 

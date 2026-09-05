@@ -55,7 +55,6 @@ $("boardClose").textContent = STR.close;
 $("tutSkip").textContent = STR.skip;
 $("tapBar").firstChild.textContent = STR.tapToBite;
 $("tapBar").querySelector(".hint").textContent = STR.tapHint;
-$("productOf").textContent = STR.productOf;
 $("trademark").textContent = STR.trademark;
 $("toastFx").textContent = STR.perfect;
 
@@ -245,8 +244,8 @@ $("shareBtn").addEventListener("click", async () => {
 function prepareShare(run) {
   $("shareBtn").disabled = true;
   Share.render(run, {
-    host: location.host.replace(/^www\./, ""),
-    tagline: STR.tagline, title: STR.title, siteLabel: STR.siteLabel,
+    title: STR.title, siteLabel: STR.siteLabel,
+    headline: STR.shareHeadline, closer: STR.shareCloser,
     stats: { score: STR.score, bites: STR.bites, perfects: STR.perfects },
   }).then((blob) => { if (blob && lastRun === run) $("shareBtn").disabled = false; })
     .catch(() => { /* no card — button stays disabled */ });
@@ -376,6 +375,7 @@ addEventListener("keydown", (e) => {
 /* ---------------- boot ---------------- */
 Loop.on("layout", ({ cy, R }) => {
   document.documentElement.style.setProperty("--ring-bottom", `${Math.round(cy + R)}px`);
+  document.documentElement.style.setProperty("--ring-center", `${Math.round(cy)}px`);
 });
 Loop.init($("stage"));
 Loop.muted = Meta.data.muted;

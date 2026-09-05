@@ -372,14 +372,15 @@ export const Loop = {
       const gr = lw * 0.64 * (1 + this.pulse * 0.26);
       this.drawApple(c, gx, gy, gr, this.bite > 0 ? `rgba(255,255,255,${this.bite * 0.9})` : null);
 
-      // Combo readout in the hub
+      // Combo readout at the bottom of the circle — the hub is where the
+      // lingo toast lands, so the multiplier sits low inside the ring.
       if (this.combo > 1) {
         c.save();
         c.textAlign = "center"; c.textBaseline = "middle";
         c.fillStyle = PAL.green;
-        c.font = `900 ${Math.round(R * 0.42)}px Recoleta, Fraunces, Georgia, serif`;
-        c.shadowColor = "rgba(255,255,255,0.8)"; c.shadowBlur = 16;
-        c.fillText(`x${this.combo}`, this.cx, this.cy);
+        c.font = `900 ${Math.round(R * 0.26)}px Recoleta, Fraunces, Georgia, serif`;
+        c.shadowColor = "rgba(255,255,255,0.85)"; c.shadowBlur = 14;
+        c.fillText(`x${this.combo}`, this.cx, this.cy + R * 0.66);
         c.restore();
       }
     } else {

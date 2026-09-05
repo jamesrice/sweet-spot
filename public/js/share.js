@@ -1,15 +1,18 @@
 // Share card — a 1080×1920 Story-sized PNG of a finished run, drawn on an
-// offscreen canvas: the stage gradient, two of the stage's props, the
-// SweeTango logo, the score, tallies, and the tagline. Rendered as soon as the
-// results sheet appears so the SHARE button can hand the file to the Web Share
-// sheet synchronously inside the tap (Safari drops the share if it has to wait
-// on an async render). Falls back to a download where files can't be shared.
+// offscreen canvas. Same branding on every share regardless of which stage
+// the run ended in: the SweeTango logo, "It's Crunch Time!", the hero apple
+// behind the score, bites and perfects, the leaf in the bottom-left, the
+// "No Ordinary Apple." line and the site URL. Only the gradient follows the
+// stage the run ended in.
+//
+// Rendered as soon as the results sheet appears so the SHARE button can hand
+// the file to the Web Share sheet synchronously inside the tap (Safari drops
+// the share if it has to wait on an async render). Falls back to a download
+// where files can't be shared.
 
 import { PAL, STAGES } from "./style.js";
-import { Loop } from "./loop.js";
 
 const W = 1080, H = 1920;
-const TAU = Math.PI * 2;
 const imgCache = {};
 
 function loadImg(src) {
@@ -29,14 +32,14 @@ function roundRect(c, x, y, w, h, r) {
 }
 
 // Draw an image inside a box, preserving aspect, anchored to the box centre.
-function fit(c, im, cx, cy, maxW, maxH, rot = 0, alpha = 1) {
+function fit(c, im, cx, cy, maxW, maxH, { rot = 0, alpha = 1, shadow = true } = {}) {
   if (!im) return;
   const s = Math.min(maxW / im.naturalWidth, maxH / im.naturalHeight);
   const w = im.naturalWidth * s, h = im.naturalHeight * s;
   c.save();
   c.globalAlpha = alpha;
   c.translate(cx, cy); c.rotate(rot);
-  c.shadowColor = "rgba(0,85,68,0.22)"; c.shadowBlur = 60; c.shadowOffsetY = 30;
+  if (shadow) { c.shadowColor = "rgba(0,85,68,0.25)"; c.shadowBlur = 70; c.shadowOffsetY = 34; }
   c.drawImage(im, -w / 2, -h / 2, w, h);
   c.restore();
 }
@@ -45,13 +48,15 @@ export const Share = {
   blob: null, url: null, run: null,
 
   // Build the PNG for `run`. Resolves to a Blob (cached on this.blob).
-  async render(run, { host, tagline, title, stats, siteLabel }) {
+  async render(run, { title, siteLabel, stats, headline, closer }) {
     const stage = STAGES.find((s) => s.name === run.stage) || STAGES[0];
-    try { await document.fonts.load('900 200px "Recoleta"'); await document.fonts.load('900 40px "Gilroy"'); } catch (e) { /* fallback stacks */ }
-    const [logo, propA, propB] = await Promise.all([
+    try {
+      await Promise.all([document.fonts.load('900 200px "Recoleta"'), document.fonts.load('900 40px "Gilroy"')]);
+    } catch (e) { /* fallback stacks */ }
+    const [logo, apple, leaf] = await Promise.all([
       loadImg("./assets/img/sweetango-logo.svg"),
-      loadImg(`./assets/img/${stage.props[0]}.webp`),
-      loadImg(`./assets/img/${stage.props[1]}.webp`),
+      loadImg("./assets/img/apple-top.webp"),
+      loadImg("./assets/img/leaf.png"),
     ]);
 
     const cv = document.createElement("canvas");
@@ -59,90 +64,84 @@ export const Share = {
     const c = cv.getContext("2d");
     const display = '"Recoleta", "Fraunces", Georgia, serif';
     const ui = '"Gilroy", -apple-system, "Segoe UI", Roboto, sans-serif';
+    const cx = W / 2;
 
-    // Background
+    // Background — the stage gradient, lifted in the middle.
     const g = c.createLinearGradient(0, 0, W, H);
     g.addColorStop(0, stage.grad[0]); g.addColorStop(1, stage.grad[1]);
     c.fillStyle = g; c.fillRect(0, 0, W, H);
-    const veil = c.createRadialGradient(W / 2, H * 0.5, 100, W / 2, H * 0.5, 900);
-    veil.addColorStop(0, "rgba(255,255,255,0.42)"); veil.addColorStop(1, "rgba(255,255,255,0)");
+    const veil = c.createRadialGradient(cx, H * 0.48, 80, cx, H * 0.48, 950);
+    veil.addColorStop(0, "rgba(255,255,255,0.40)"); veil.addColorStop(1, "rgba(255,255,255,0)");
     c.fillStyle = veil; c.fillRect(0, 0, W, H);
 
-    // Props — one bleeding off the top-right, one off the bottom-left.
-    fit(c, propA, W - 120, 300, 640, 640, -0.18);
-    fit(c, propB, 120, H - 360, 620, 620, 0.22);
+    // Leaf — bottom-left, bleeding off the edge, behind everything. The PNG
+    // is a pale tint, so it's multiplied in to read on the lighter gradients.
+    c.save();
+    c.globalCompositeOperation = "multiply";
+    fit(c, leaf, 230, H - 290, 980, 820, { rot: -0.1, alpha: 1, shadow: false });
+    c.restore();
 
     // Logo
     if (logo) {
-      const lw = 440, lh = lw * (logo.naturalHeight / logo.naturalWidth || 0.27);
-      c.drawImage(logo, (W - lw) / 2, 150, lw, lh);
+      const lw = 470, lh = lw * (logo.naturalHeight / logo.naturalWidth || 0.27);
+      c.drawImage(logo, (W - lw) / 2, 130, lw, lh);
     }
 
-    // Eyebrow
+    // "It's Crunch Time!"
     c.textAlign = "center"; c.textBaseline = "alphabetic";
     c.fillStyle = PAL.green;
-    c.font = `900 30px ${ui}`;
-    this.tracked(c, title.toUpperCase(), W / 2, 330, 9);
-
-    // Ring with an apple, hub holds the score
-    const cx = W / 2, cy = 880, R = 330, lw2 = 40;
-    c.save();
-    c.strokeStyle = "rgba(255,255,255,0.45)"; c.lineWidth = lw2 + 22;
-    c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.stroke();
-    c.strokeStyle = PAL.green; c.lineWidth = lw2;
-    c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.stroke();
-    c.lineCap = "round";
-    c.shadowColor = stage.zone; c.shadowBlur = 50;
-    c.strokeStyle = stage.zone; c.lineWidth = lw2 * 0.9;
-    c.beginPath(); c.arc(cx, cy, R, -Math.PI / 2 - 0.5, -Math.PI / 2 + 0.5); c.stroke();
-    c.shadowColor = "#fff"; c.shadowBlur = 40;
-    c.strokeStyle = "rgba(255,255,255,0.95)"; c.lineWidth = lw2 * 0.34;
-    c.beginPath(); c.arc(cx, cy, R, -Math.PI / 2 - 0.12, -Math.PI / 2 + 0.12); c.stroke();
-    c.restore();
-    Loop.drawApple(c, cx + Math.cos(0.75) * R, cy + Math.sin(0.75) * R, 34, null);
-
-    c.fillStyle = PAL.green;
-    c.font = `900 60px ${ui}`;
-    // Score
-    const scoreStr = String(run.score);
-    const size = scoreStr.length > 5 ? 190 : scoreStr.length > 4 ? 230 : 270;
-    c.font = `900 ${size}px ${display}`;
-    c.shadowColor = "rgba(255,255,255,0.9)"; c.shadowBlur = 40;
-    c.fillText(scoreStr, cx, cy + size * 0.36);
+    c.font = `900 78px ${display}`;
+    c.shadowColor = "rgba(255,255,255,0.8)"; c.shadowBlur = 24;
+    c.fillText(headline, cx, 370);
     c.shadowBlur = 0;
-    c.font = `900 28px ${ui}`;
-    this.tracked(c, stats.score.toUpperCase(), cx, cy - size * 0.42, 9);
+
+    // Hero apple — behind the score.
+    fit(c, apple, cx, 790, 760, 700, { rot: 0.06 });
+
+    // Score — over the lower half of the apple, lifted off it with a white halo.
+    const scoreStr = String(run.score);
+    const size = scoreStr.length > 5 ? 200 : scoreStr.length > 4 ? 240 : 290;
+    const sy = 1090;
+    c.font = `900 ${size}px ${display}`;
+    c.save();
+    c.lineJoin = "round";
+    c.strokeStyle = "rgba(255,255,255,0.92)";
+    c.lineWidth = 26;
+    c.shadowColor = "rgba(255,255,255,0.95)"; c.shadowBlur = 60;
+    c.strokeText(scoreStr, cx, sy);
+    c.restore();
+    c.fillStyle = PAL.green;
+    c.fillText(scoreStr, cx, sy);
+    c.font = `900 30px ${ui}`;
+    c.fillStyle = "#fff";
+    c.save();
+    c.shadowColor = "rgba(0,85,68,0.5)"; c.shadowBlur = 18;
+    this.tracked(c, stats.score.toUpperCase(), cx, sy - size * 0.78, 10);
+    c.restore();
 
     // Tallies
-    const ty = 1330, tw = 380, th = 150, gap = 40;
+    const ty = 1230, tw = 380, th = 160, gap = 40;
     [[run.locks, stats.bites], [run.perfects, stats.perfects]].forEach(([v, k], i) => {
       const x = cx - tw - gap / 2 + i * (tw + gap);
-      c.fillStyle = "rgba(255,255,255,0.55)";
-      roundRect(c, x, ty, tw, th, 34); c.fill();
+      c.fillStyle = "rgba(255,255,255,0.62)";
+      roundRect(c, x, ty, tw, th, 36); c.fill();
       c.fillStyle = PAL.green;
-      c.font = `900 78px ${display}`;
-      c.fillText(String(v), x + tw / 2, ty + 88);
+      c.font = `900 84px ${display}`;
+      c.fillText(String(v), x + tw / 2, ty + 94);
       c.font = `700 24px ${ui}`;
-      this.tracked(c, k.toUpperCase(), x + tw / 2, ty + 128, 5);
+      this.tracked(c, k.toUpperCase(), x + tw / 2, ty + 136, 5);
     });
 
-    // Pace · stage pill
-    const pill = `${run.pace} · ${run.stage}`.toUpperCase();
-    c.font = `900 26px ${ui}`;
-    const pw = this.trackedWidth(c, pill, 6) + 80;
+    // "No Ordinary Apple."
     c.fillStyle = PAL.green;
-    roundRect(c, cx - pw / 2, 1520, pw, 66, 33); c.fill();
-    c.fillStyle = PAL.lime;
-    this.tracked(c, pill, cx, 1564, 6);
+    c.font = `900 84px ${display}`;
+    c.shadowColor = "rgba(255,255,255,0.8)"; c.shadowBlur = 24;
+    c.fillText(closer, cx, 1650);
+    c.shadowBlur = 0;
 
-    // Tagline + site
-    c.fillStyle = PAL.green;
-    c.font = `900 44px ${display}`;
-    c.fillText(tagline, cx, 1700);
-    c.font = `700 26px ${ui}`;
-    c.globalAlpha = 0.75;
-    this.tracked(c, `${siteLabel}  ·  ${host}`.toUpperCase(), cx, 1760, 6);
-    c.globalAlpha = 1;
+    // Site URL, centred at the bottom.
+    c.font = `900 34px ${ui}`;
+    this.tracked(c, siteLabel.toUpperCase(), cx, 1770, 8);
 
     const blob = await new Promise((res) => cv.toBlob(res, "image/png"));
     if (this.url) URL.revokeObjectURL(this.url);
