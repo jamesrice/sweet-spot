@@ -2,7 +2,7 @@
 // Voice: SweeTango's — bright, confident, a little cheeky. Short lines.
 export const STR = {
   title: "Sweet Spot",
-  tagline: "No Ordinary Apple. One Bite. Timing Matters.",
+  tagline: "One Bite. Timing Matters.",
   play: "PLAY",
   taste: "TASTE SWEETANGO",
   tasteUrl: "https://sweetango.com/",
@@ -44,7 +44,7 @@ export const STR = {
   saved: "SAVED!",
 
   howToPlay: "HOW TO PLAY",
-  lbTitle: "Crunch Legends",
+  lbTitle: "Sweet Legends",
   lbSub: "Global top 10 · every player, every device",
   lbEmpty: "No legends yet — take the first bite!",
   lbOffline: "Offline — showing this device only",

@@ -9,16 +9,45 @@
 // Stage changes get a four-note riser, a new best a bell fanfare, and the
 // run-over is a bonk-and-wah — a wince, not a punishment.
 //
-// The AudioContext is created lazily inside a user gesture (the first tap or
-// button press) so iOS lets it through.
+// Mobile unlock. Two things have to be true before a phone makes a sound:
+//
+// 1. The AudioContext must be created *and resumed* inside a user-activation
+//    event. On touch devices pointerdown does NOT count as activation (only
+//    pointerup / touchend / click do), so unlock() is wired to all of them —
+//    see app.js. It's idempotent, so calling it on every gesture is fine.
+// 2. On iPhone, Web Audio obeys the hardware ringer switch: silent mode means
+//    silence, even with the volume up. HTML <audio> playback does not. So on
+//    iOS we start a looping, silent <audio> element on the first gesture,
+//    which moves the page's audio session to "playback" and lets Web Audio
+//    through with the switch on. (The same trick unmute-ios-audio uses.)
 
 const PENT = [0, 2, 4, 7, 9, 12, 14, 16];
+
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+// 0.5 s of 8 kHz 16-bit mono silence as a WAV blob URL — built at runtime
+// so there's nothing to host or license.
+function silentWav() {
+  const rate = 8000, n = rate / 2, bytes = 44 + n * 2;
+  const b = new ArrayBuffer(bytes), v = new DataView(b);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, bytes - 8, true); w(8, "WAVE"); w(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, "data"); v.setUint32(40, n * 2, true);
+  return URL.createObjectURL(new Blob([b], { type: "audio/wav" }));
+}
 
 export const Sfx = {
   ctx: null,
   master: null,
   noiseBuf: null,
   muted: false,
+  silent: null,          // the iOS silent-loop <audio>
+  silentState: "off",
+  unlockedBy: "",
+  isIOS,
 
   ctxGet() {
     const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -37,8 +66,46 @@ export const Sfx = {
     return this.ctx;
   },
 
-  // Call from any user gesture so the context exists before the first bite.
-  unlock() { try { this.ctxGet(); } catch (e) { /* no audio */ } },
+  // Call from any user gesture. Creates + resumes the context and, on iOS,
+  // starts the silent loop. Safe to call on every gesture.
+  unlock(via) {
+    try {
+      const ctx = this.ctxGet();
+      if (ctx && ctx.state === "running" && !this.unlockedBy) this.unlockedBy = via || "gesture";
+      if (ctx && ctx.state !== "running") {
+        ctx.resume().then(() => { if (!this.unlockedBy) this.unlockedBy = via || "gesture"; }).catch(() => {});
+      }
+    } catch (e) { /* no audio */ }
+    if (isIOS) this.startSilentLoop();
+  },
+
+  startSilentLoop() {
+    try {
+      if (!this.silent) {
+        const a = document.createElement("audio");
+        a.setAttribute("playsinline", ""); a.setAttribute("webkit-playsinline", "");
+        a.loop = true; a.preload = "auto"; a.src = silentWav();
+        a.addEventListener("playing", () => { this.silentState = "playing"; });
+        a.addEventListener("pause", () => { this.silentState = "paused"; });
+        this.silent = a;
+      }
+      if (this.silent.paused) {
+        const p = this.silent.play();
+        if (p && p.catch) p.catch((e) => { this.silentState = "blocked: " + (e && e.name); });
+      }
+    } catch (e) { this.silentState = "error"; }
+  },
+
+  // After a phone call / Siri / backgrounding, iOS leaves the context
+  // "interrupted" or suspended; the next gesture (or return to the tab) resumes it.
+  resume() {
+    try {
+      if (this.ctx && this.ctx.state !== "running") this.ctx.resume().catch(() => {});
+      if (isIOS && this.silent && this.silent.paused) this.startSilentLoop();
+    } catch (e) { /* silent */ }
+  },
+
+  diag() { return { isIOS, silentState: this.silentState, unlockedBy: this.unlockedBy, state: this.ctx ? this.ctx.state : "none" }; },
 
   // Scheduling origin: if the context is still resuming, push the cue a hair
   // into the future so nothing lands before the clock starts.

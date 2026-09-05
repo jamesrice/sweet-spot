@@ -1,5 +1,5 @@
 // Between-run persistence: best score, longest run, the perfects from your
-// best run, and a local Crunch Legends board. All localStorage — the Cloudflare
+// best run, and a local Sweet Legends board. All localStorage — the Cloudflare
 // KV board in worker/scores.js takes over when deployed.
 
 const KEY = "sweetspot.v1";

@@ -1,4 +1,4 @@
-// Crunch Legends — backed by Workers KV (binding SCORES).
+// Sweet Legends — backed by Workers KV (binding SCORES).
 //
 // GET  /api/scores            -> [{n, s, b, t}, ...]  all-time global top 10
 // POST /api/scores {n, s, b}  -> updated top 10     (initials, score, bites)

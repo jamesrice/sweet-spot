@@ -224,8 +224,15 @@ $("muteBtn").addEventListener("click", (e) => {
   $("muteBtn").textContent = Loop.muted ? "🔇" : "🔊";
 });
 
-// Every button gets a tick, and any gesture unlocks audio for iOS.
-addEventListener("pointerdown", () => Sfx.unlock(), { passive: true });
+// Unlock audio on every kind of gesture. pointerdown alone is not enough:
+// on touch screens only pointerup / touchend / click count as user activation,
+// and iOS will refuse to start the context (or the silent loop) without one.
+for (const ev of ["pointerdown", "pointerup", "touchend", "click", "keydown"]) {
+  addEventListener(ev, () => Sfx.unlock(ev), { passive: true, capture: true });
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden) Sfx.resume(); });
+addEventListener("pageshow", () => Sfx.resume());
+// Every button gets a tick.
 addEventListener("click", (e) => {
   if (e.target.closest && e.target.closest(".btn, .iconBtn, .link")) Sfx.tick();
 });
@@ -403,7 +410,8 @@ show("home");
      ?smoke&sloppy bot aims off-centre, so misses (and the run-over path) fire
    Results land in window.__SMOKE and the document title.               */
 const qs = new URLSearchParams(location.search);
-if (qs.has("dev") || qs.has("smoke")) { window.__loop = Loop; window.__share = Share; window.__sfx = Sfx; }
+if (qs.has("dev") || qs.has("smoke") || qs.has("audiotest")) { window.__loop = Loop; window.__share = Share; window.__sfx = Sfx; }
+if (qs.has("audiotest")) import("./js/audiotest.js").then((m) => m.mountAudioTest());
 
 if (qs.has("smoke")) {
   const sloppy = qs.has("sloppy");

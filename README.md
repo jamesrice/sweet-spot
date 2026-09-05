@@ -96,7 +96,7 @@ count toward any of them.
 
 ## Live board
 
-`worker/scores.js` backs the **Crunch Legends** board with Workers KV (binding
+`worker/scores.js` backs the **Sweet Legends** board with Workers KV (binding
 `SCORES`, namespace `SWEETSPOT_SCORES`). `GET /api/scores` returns the
 all-time global top 10; `POST` takes `{n, s, b}` (3-char initials, score, bites).
 
@@ -139,6 +139,13 @@ for (let i = 0; i < 20000 && L.state === 'live'; i++) { n += 16; L.last = n - 16
 
 ## Notes
 
+- **Mobile audio:** the context is unlocked on pointerup / touchend / click
+  (pointerdown doesn't count as activation on touch screens), and on iOS a
+  looping silent `<audio>` element is started on the first gesture so Web
+  Audio plays even with the ringer switch on silent. Open `?audiotest` on a
+  phone to see the context state, the silent-loop state and a live output
+  meter — if the meter moves and you hear nothing, it's the switch, the
+  volume, or a Bluetooth route, not the code.
 - **Audio** is 100% synthesized in `js/audio.js` — no samples. Every bite is a
   *crunch*: a bright snap, a run of eight irregular noise grains as the flesh
   fractures, a lowpassed chew and a low thump. Normal bites add a quiet marimba

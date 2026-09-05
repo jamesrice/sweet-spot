@@ -90,9 +90,14 @@
   }
 
   /* ---------- home ---------- */
-  #home { justify-content: center; gap: 14px; }
-  .stack { width: min(440px, 100%); display: flex; flex-direction: column; gap: 12px; margin: auto 0; }
-  .logo { width: 156px; height: auto; display: block; margin: 0 auto 4px;
+  /* The home stack hangs off the ring the engine draws behind it: the logo
+     floats clear above the ring's top edge, the title starts just inside it.
+     --ring-center / --ring-r come from the engine's resize(). */
+  #home { justify-content: flex-start; gap: 14px; }
+  .stack { width: min(440px, 100%); display: flex; flex-direction: column; gap: 12px;
+    margin: calc(var(--ring-center, 354px) - var(--ring-r, 133px) + 14px - max(18px, env(safe-area-inset-top))) 0 0; }
+  .logo { position: absolute; left: 50%; transform: translateX(-50%); width: 156px; height: auto;
+    top: calc(var(--ring-center, 354px) - var(--ring-r, 133px) - 64px);
     filter: drop-shadow(0 2px 10px rgba(255,255,255,.7)); }
   h1 {
     margin: 0; text-align: center; font-size: clamp(46px, 13vw, 68px); line-height: .94;
@@ -151,7 +156,7 @@
   .btnRow .btn { flex: 1; }
 
   .foot { width: min(440px, 100%); text-align: center; display: flex; flex-direction: column; gap: 8px;
-    align-items: center; padding-top: 6px; }
+    align-items: center; padding: 18px 0 0; margin-top: auto; }
   .foot .tm { font-size: 9.5px; opacity: .55; line-height: 1.4; max-width: 340px; }
   .foot .of { display: none; align-items: center; gap: 8px; color: var(--green); opacity: .62;
     text-decoration: none; font-size: 9.5px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700;
@@ -194,7 +199,8 @@
     transition: transform .12s ease; }
   .iconBtn:hover { transform: scale(1.08); }
   #homeBtn { top: max(16px, env(safe-area-inset-top)); left: 16px; }
-  #muteBtn { bottom: calc(max(22px, env(safe-area-inset-bottom)) + 76px); right: 16px; }
+  /* Mute lives outside the HUD so it's reachable on every screen. */
+  #muteBtn { position: fixed; bottom: calc(max(22px, env(safe-area-inset-bottom)) + 76px); right: 16px; z-index: 4; }
 
   #tapBar { position: absolute; left: 50%; transform: translateX(-50%);
     bottom: max(22px, env(safe-area-inset-bottom)); width: min(520px, calc(100% - 32px));
@@ -275,9 +281,25 @@
   .sheet .btnRow { margin-top: 14px; }
 
   @media (max-height: 680px) {
-    .logo { width: 120px; } h1 { font-size: 44px; } .stack { gap: 9px; }
+    .logo { width: 120px; top: calc(var(--ring-center, 354px) - var(--ring-r, 133px) - 52px); }
+    h1 { font-size: 44px; } .stack { gap: 9px; }
     .btn { padding: 13px 18px; } .stat b { font-size: 23px; } .foot .tm { display: none; }
   }
+  /* ?audiotest diagnostic */
+  #audiotest { position: fixed; left: 12px; right: 12px; top: max(10px, env(safe-area-inset-top)); z-index: 9; pointer-events: auto;
+    background: rgba(11,34,17,.94); color: #E3FF96; border-radius: 14px; padding: 10px 14px;
+    font: 12px/1.5 ui-monospace, Menlo, monospace; box-shadow: 0 10px 30px rgba(0,0,0,.3); max-height: 70vh; overflow: auto; }
+  #audiotest b { display: flex; justify-content: space-between; gap: 8px; letter-spacing: .2em; font-size: 10px; cursor: pointer; }
+  #audiotest b span { letter-spacing: 0; color: #fff; text-transform: none; flex: 1; text-align: right; font-weight: 400; }
+  #audiotest.collapsed #atRows, #audiotest.collapsed .atBtns, #audiotest.collapsed .atNote { display: none; }
+  #audiotest.collapsed { padding: 8px 14px; }
+  #audiotest div div { display: flex; justify-content: space-between; gap: 10px; }
+  #audiotest em { font-style: normal; color: #fff; text-align: right; }
+  #audiotest .atBtns { display: flex; gap: 8px; margin: 8px 0 6px; }
+  #audiotest button { flex: 1; padding: 9px; border-radius: 9px; border: 0; background: #E3FF96; color: #005544;
+    font: 900 12px var(--ui); letter-spacing: .1em; }
+  #audiotest .atNote { opacity: .75; font-size: 11px; }
+
   @media (prefers-reduced-motion: reduce) {
     .propWrap, #tapBar { animation: none; }
     .prop, .btn, .iconBtn { transition: none; }
@@ -353,7 +375,6 @@
       <div id="comboVal">x0</div>
     </div>
     <div class="iconBtn" id="homeBtn" role="button" aria-label="Home">⌂</div>
-    <div class="iconBtn" id="muteBtn" role="button" aria-label="Mute">🔊</div>
     <div id="tapBar">TAP TO BITE<span class="hint">Tap, click, or hit Space</span></div>
     <div id="toast"><div id="toastFx">PERFECT BITE</div><div id="toastName"></div><div id="toastPts"></div></div>
   </div>
@@ -389,12 +410,14 @@
   <!-- ============ LEADERBOARD ============ -->
   <section class="screen veil" id="board" hidden>
     <div class="sheet panel">
-      <h2 id="boardTitle">Crunch Legends</h2>
+      <h2 id="boardTitle">Sweet Legends</h2>
       <div class="lbSub" id="boardSub"></div>
       <div class="rows" id="boardRows"></div>
       <button class="btn ghost" id="boardClose">CLOSE</button>
     </div>
   </section>
+
+  <div class="iconBtn" id="muteBtn" role="button" aria-label="Mute">🔊</div>
 </div>
 
 <script type="module" src="./app.js"></script>

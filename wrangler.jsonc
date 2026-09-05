@@ -16,7 +16,7 @@
 		"run_worker_first": ["/api/*"]
 	},
 
-	// Live Crunch Legends board. Its own namespace (SWEETSPOT_SCORES) so it
+	// Live Sweet Legends board. Its own namespace (SWEETSPOT_SCORES) so it
 	// never merges with Loop De Drop's LOOPDEDROP_SCORES. The binding stays
 	// SCORES, which is what worker/scores.js reads. Never add "remote": true —
 	// local dev must not touch production data.
