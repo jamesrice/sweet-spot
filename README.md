@@ -7,8 +7,8 @@ apple sweeps a circular track, a glowing sweet spot opens ahead of it, and you
 tap to bite while the apple is inside the spot. Every bite flips the loop's
 direction, speeds it up and narrows the spot. One miss ends the run.
 
-Gameplay is the same engine as [Loop De Drop](https://github.com/jamesrice/drops-loop)
-(itself modelled on rushloop.io); everything you see and hear is SweeTango's —
+Gameplay is the same engine as [Loop De Drop](https://github.com/jamesrice/drops-loop);
+everything you see and hear is SweeTango's —
 the 2026 site's logo, Gilroy + Recoleta, the hero gradients from
 `/where-to-buy/` and `/our-growers/`, the six floating fruit props from the
 home page, and the site's own flavour vocabulary.
