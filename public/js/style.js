@@ -1,4 +1,4 @@
-// Visual + tuning tokens for Crunch Time. Everything the renderer, the stage
+// Visual + tuning tokens for Sweet Spot. Everything the renderer, the stage
 // system and the difficulty curve read lives here — retuning the game is a
 // data change.
 //
@@ -65,7 +65,7 @@ export const CURVE = {
 // HUD pace label thresholds, in rad/s.
 export const PACE = [
   { at: 0,   label: "Warm-up" },
-  { at: 3.0, label: "Crunch Time" },
+  { at: 3.0, label: "Big Crunch" },
   { at: 5.5, label: "Full Zing" },
 ];
 

@@ -2,7 +2,7 @@
 // best run, and a local Crunch Legends board. All localStorage — the Cloudflare
 // KV board in worker/scores.js takes over when deployed.
 
-const KEY = "crunchtime.v1";
+const KEY = "sweetspot.v1";
 const DEFAULTS = {
   best: 0,             // best score
   bestBites: 0,        // longest run, in bites

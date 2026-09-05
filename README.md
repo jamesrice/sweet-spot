@@ -1,4 +1,4 @@
-# Crunch Time
+# Sweet Spot
 
 **No Ordinary Apple. One Bite. Timing Matters.**
 
@@ -50,7 +50,7 @@ There is no mode picker. A run starts at Loop De Drop's easy setting
 the spot by 0.962, until it is running at the old expert ceiling (8.5 rad/s,
 0.22 rad). Roughly: bite 10 feels like the old expert start, bite 26 is
 5 rad/s, bite 38 is flat out. The HUD pill under the score names the pace —
-**Warm-up → Crunch Time → Full Zing** — and the current stage.
+**Warm-up → Big Crunch → Full Zing** — and the current stage.
 
 ### Stages
 
@@ -97,7 +97,7 @@ count toward any of them.
 ## Live board
 
 `worker/scores.js` backs the **Crunch Legends** board with Workers KV (binding
-`SCORES`, namespace `CRUNCHTIME_SCORES`). `GET /api/scores` returns the
+`SCORES`, namespace `SWEETSPOT_SCORES`). `GET /api/scores` returns the
 all-time top 8; `POST` takes `{n, s, b}` (3-char initials, score, bites).
 
 The client falls back to a localStorage board whenever the API is unreachable,
@@ -111,7 +111,7 @@ the real API and KV locally.
 npm run deploy      # wrangler deploy
 ```
 
-To get push-to-deploy, connect `jamesrice/crunch-time` to **Cloudflare Workers
+To get push-to-deploy, connect `jamesrice/sweet-spot` to **Cloudflare Workers
 Builds** in the dashboard (same recipe as drops-loop): no build command, deploy
 `npx wrangler deploy`, version `npx wrangler versions upload`, root `/`. The KV
 binding in `wrangler.jsonc` is authoritative for Worker deploys. Never set

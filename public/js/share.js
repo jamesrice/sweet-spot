@@ -1,6 +1,6 @@
 // Share card — a 1080×1920 Story-sized PNG of a finished run, drawn on an
 // offscreen canvas. Same branding on every share regardless of which stage
-// the run ended in: the SweeTango logo, "It's Crunch Time!", the hero apple
+// the run ended in: the SweeTango logo, "Hit the Sweet Spot!", the hero apple
 // behind the score, bites and perfects, the leaf in the bottom-left, the
 // "No Ordinary Apple." line and the site URL. Only the gradient follows the
 // stage the run ended in.
@@ -87,7 +87,7 @@ export const Share = {
       c.drawImage(logo, (W - lw) / 2, 130, lw, lh);
     }
 
-    // "It's Crunch Time!"
+    // "Hit the Sweet Spot!"
     c.textAlign = "center"; c.textBaseline = "alphabetic";
     c.fillStyle = PAL.green;
     c.font = `900 78px ${display}`;
@@ -168,13 +168,13 @@ export const Share = {
   // from inside a user gesture. Returns "shared" | "downloaded" | "none".
   async share({ title, text }) {
     if (!this.blob) return "none";
-    const file = new File([this.blob], "crunch-time-score.png", { type: "image/png" });
+    const file = new File([this.blob], "sweet-spot-score.png", { type: "image/png" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       try { await navigator.share({ files: [file], title, text }); return "shared"; }
       catch (e) { if (e && e.name === "AbortError") return "shared"; /* fall through */ }
     }
     const a = document.createElement("a");
-    a.href = this.url; a.download = "crunch-time-score.png";
+    a.href = this.url; a.download = "sweet-spot-score.png";
     document.body.appendChild(a); a.click(); a.remove();
     return "downloaded";
   },

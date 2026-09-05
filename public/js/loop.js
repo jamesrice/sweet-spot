@@ -1,4 +1,4 @@
-// Crunch Time — the game itself.
+// Sweet Spot — the game itself.
 //
 // One apple sweeps a circular track. A glowing sweet spot opens somewhere
 // ahead of it. Tap to bite while the apple is inside the spot: the loop

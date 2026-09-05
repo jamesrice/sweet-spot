@@ -1,7 +1,7 @@
 // All player-visible strings — adding a language is a data change.
 // Voice: SweeTango's — bright, confident, a little cheeky. Short lines.
 export const STR = {
-  title: "Crunch Time",
+  title: "Sweet Spot",
   tagline: "No Ordinary Apple. One Bite. Timing Matters.",
   play: "PLAY",
   taste: "TASTE SWEETANGO",
@@ -12,9 +12,9 @@ export const STR = {
   siteLabel: "sweetango.com",
 
   // Season countdown on the home screen. {n} is the day count.
-  seasonSoon: "Crunch Time starts in {n} days",
-  seasonTomorrow: "Crunch Time starts tomorrow",
-  seasonNow: "It's Crunch Time — SweeTango is in season",
+  seasonSoon: "SweeTango season starts in {n} days",
+  seasonTomorrow: "SweeTango season starts tomorrow",
+  seasonNow: "SweeTango is in season — find the sweet spot",
   seasonOver: "Season's over — back late summer",
 
   statsTitle: "Your Crunch Stats",
@@ -36,10 +36,10 @@ export const STR = {
   again: "BITE AGAIN",
   home: "Home",
   share: "SHARE",
-  shareTitle: "Crunch Time",
-  shareHeadline: "It's Crunch Time!",
+  shareTitle: "Sweet Spot",
+  shareHeadline: "Hit the Sweet Spot!",
   shareCloser: "No Ordinary Apple.",
-  shareText: "I scored {s} in Crunch Time — {b} bites of SweeTango. No Ordinary Apple. One Bite. Timing Matters.",
+  shareText: "I scored {s} in Sweet Spot — {b} bites of SweeTango. No Ordinary Apple. One Bite. Timing Matters.",
   shared: "SHARED!",
   saved: "SAVED!",
 

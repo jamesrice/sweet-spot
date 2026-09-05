@@ -1,5 +1,5 @@
 /**
- * Crunch Time Worker — serves the static game (assets binding) and the Crunch
+ * Sweet Spot Worker — serves the static game (assets binding) and the Crunch
  * Legends board. The board logic lives in ./scores.js; this file only routes.
  */
 import { onRequestGet, onRequestPost } from "./scores.js";

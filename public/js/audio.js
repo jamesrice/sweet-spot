@@ -1,4 +1,4 @@
-// Crunch Time sound — everything is synthesized in WebAudio, no samples.
+// Sweet Spot sound — everything is synthesized in WebAudio, no samples.
 //
 // The signature is the *crunch*. A bite isn't one noise burst: it's a sharp
 // snap as the skin breaks, then a fast run of grains as the flesh fractures,
