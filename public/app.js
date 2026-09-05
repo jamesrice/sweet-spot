@@ -3,8 +3,9 @@
 import { Loop } from "./js/loop.js";
 import { Meta } from "./js/meta.js";
 import { Sfx } from "./js/audio.js";
+import { Share } from "./js/share.js";
 import { STR } from "./strings.js";
-import { STAGES, PROPS } from "./js/style.js";
+import { STAGES, PROPS, SEASON, MILESTONES } from "./js/style.js";
 
 const $ = (id) => document.getElementById(id);
 const screens = { home: $("home"), tut: $("tut"), results: $("results"), board: $("board") };
@@ -43,9 +44,12 @@ $("runOverText").textContent = STR.runOver;
 $("newBestText").textContent = STR.newBest;
 $("againBtn").textContent = STR.again;
 $("backBtn").textContent = STR.home.toUpperCase();
+$("shareBtn").querySelector("span").textContent = STR.share;
 $("cravingText").textContent = STR.craving;
 $("tasteLink").href = STR.tasteUrl;
 $("tasteLink").textContent = STR.taste;
+$("findBtn").href = STR.findUrl;
+$("findBtn").querySelector("span").textContent = STR.findNearYou;
 $("boardTitle").textContent = STR.lbTitle;
 $("boardClose").textContent = STR.close;
 $("tutSkip").textContent = STR.skip;
@@ -54,6 +58,13 @@ $("tapBar").querySelector(".hint").textContent = STR.tapHint;
 $("productOf").textContent = STR.productOf;
 $("trademark").textContent = STR.trademark;
 $("toastFx").textContent = STR.perfect;
+
+/* ---------------- haptics ----------------
+   A short buzz on every bite where the device supports it — longer pattern
+   for perfects, a triple for the miss. Independent of the mute toggle. */
+function buzz(pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { /* unsupported */ }
+}
 
 /* ---------------- scenery: gradient + floating props ----------------
    Two stacked gradient layers crossfade; two prop slots fade out, swap
@@ -109,12 +120,48 @@ function paintPace(pace, stageName, pop) {
   if (pop) { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); }
 }
 
+// Milestone line: a beat of SweeTango's tasting copy under the pill when a
+// stage turns over. Holds a couple of seconds, then fades.
+let lineTimer = null;
+function paintMilestone(stageIndex) {
+  const el = $("stageLine");
+  const line = MILESTONES[stageIndex % MILESTONES.length];
+  if (!line) return;
+  el.textContent = line;
+  el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+  clearTimeout(lineTimer);
+  lineTimer = setTimeout(() => el.classList.remove("show"), 2600);
+}
+
+/* ---------------- season countdown ----------------
+   SEASON.start / SEASON.end live in js/style.js — update them each year. */
+function paintSeason() {
+  const el = $("season");
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const start = new Date(SEASON.start + "T00:00:00");
+  const end = new Date(SEASON.end + "T23:59:59");
+  let text, state;
+  if (today < start) {
+    const n = Math.ceil((start - today) / 86400000);
+    text = n === 1 ? STR.seasonTomorrow : STR.seasonSoon.replace("{n}", n);
+    state = "soon";
+  } else if (now <= end) {
+    text = STR.seasonNow; state = "now";
+  } else {
+    text = STR.seasonOver; state = "over";
+  }
+  el.textContent = text;
+  el.dataset.state = state;
+}
+
 /* ---------------- home ---------------- */
 function paintHome() {
   const d = Meta.data;
   $("statBest").textContent = d.best;
   $("statBites").textContent = d.bestBites;
   $("statPerfects").textContent = d.bestPerfects;
+  paintSeason();
   applyStage(STAGES[0]);
 }
 
@@ -155,6 +202,7 @@ function beginRun() {
   $("hudBest").textContent = `${STR.best} ${Meta.data.best}`;
   $("tapBar").style.display = "";
   $("toast").classList.remove("pop");
+  $("stageLine").classList.remove("show");
   Loop.start();
   paintPace(Loop.paceLabel(), Loop.stage.name, false);
 }
@@ -181,6 +229,28 @@ addEventListener("pointerdown", () => Sfx.unlock(), { passive: true });
 addEventListener("click", (e) => {
   if (e.target.closest && e.target.closest(".btn, .iconBtn, .link")) Sfx.tick();
 });
+
+/* ---------------- share card ---------------- */
+$("shareBtn").addEventListener("click", async () => {
+  if (!lastRun) return;
+  const btn = $("shareBtn");
+  const label = btn.querySelector("span");
+  const text = STR.shareText.replace("{s}", lastRun.score).replace("{b}", lastRun.locks);
+  const how = await Share.share({ title: STR.shareTitle, text });
+  if (how === "none") return;
+  label.textContent = how === "shared" ? STR.shared : STR.saved;
+  setTimeout(() => { label.textContent = STR.share; }, 1800);
+});
+
+function prepareShare(run) {
+  $("shareBtn").disabled = true;
+  Share.render(run, {
+    host: location.host.replace(/^www\./, ""),
+    tagline: STR.tagline, title: STR.title, siteLabel: STR.siteLabel,
+    stats: { score: STR.score, bites: STR.bites, perfects: STR.perfects },
+  }).then((blob) => { if (blob && lastRun === run) $("shareBtn").disabled = false; })
+    .catch(() => { /* no card — button stays disabled */ });
+}
 
 /* ---------------- leaderboard ---------------- */
 async function fetchBoard() {
@@ -236,8 +306,9 @@ Loop.on("score", (s) => {
   $("comboVal").textContent = "x" + s.combo;
 });
 
-Loop.on("stage", ({ stage, announce }) => {
+Loop.on("stage", ({ stage, index, announce }) => {
   applyStage(stage, !announce && screen !== "play");
+  if (announce) paintMilestone(index);
 });
 
 Loop.on("lock", (info) => {
@@ -250,20 +321,28 @@ Loop.on("lock", (info) => {
   void t.offsetWidth; // restart the animation
   t.classList.add("pop");
   paintPace(info.pace, Loop.stage.name, info.stageUp);
+  buzz(info.perfect ? [14, 40, 22] : 12);
 });
 
 Loop.on("over", (run) => {
   lastRun = run;
   lastResult = Meta.record(run);
+  buzz([45, 60, 45]);
   $("finalScore").textContent = run.score;
   $("tBites").textContent = run.locks;
   $("tPerf").textContent = run.perfects;
   $("newBestText").hidden = !lastResult.isBest;
+  // Reward a new best with the action that sells apples: the store locator
+  // takes over from the plain "taste" link.
+  const best = lastResult.isBest && run.score > 0;
+  $("findBtn").hidden = !best;
+  $("cravingRow").hidden = best;
   $("initials").value = "";
   $("postBtn").disabled = false;
+  prepareShare(run);
   setTimeout(() => {
     show("results");
-    if (lastResult.isBest && run.score > 0) Sfx.fanfare();
+    if (best) Sfx.fanfare();
   }, 750); // let the confetti land first
 });
 
@@ -306,12 +385,12 @@ paintHome();
 show("home");
 
 /* ---------------- QA harness ----------------
-     ?dev          exposes the engine as window.__loop
+     ?dev          exposes the engine as window.__loop (and the card as __share)
      ?smoke        autoplay bot — bites near the centre of every sweet spot
      ?smoke&sloppy bot aims off-centre, so misses (and the run-over path) fire
    Results land in window.__SMOKE and the document title.               */
 const qs = new URLSearchParams(location.search);
-if (qs.has("dev") || qs.has("smoke")) window.__loop = Loop;
+if (qs.has("dev") || qs.has("smoke")) { window.__loop = Loop; window.__share = Share; window.__sfx = Sfx; }
 
 if (qs.has("smoke")) {
   const sloppy = qs.has("sloppy");

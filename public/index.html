@@ -102,6 +102,18 @@
   .tag { text-align: center; font-size: 15px; font-weight: 700; letter-spacing: .01em; margin: 2px 0 6px;
     color: var(--green); opacity: .9; text-wrap: balance; }
 
+  .season { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -2px auto 6px;
+    padding: 7px 14px; border-radius: 999px; width: max-content; max-width: 100%; box-sizing: border-box;
+    background: rgba(255,255,255,.5); border: var(--edge); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; font-weight: 900; color: var(--green); white-space: nowrap;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .season::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: var(--green); flex: none; }
+  .season[data-state="now"] { background: var(--green); color: var(--lime); border-color: var(--green); }
+  .season[data-state="now"]::before { background: var(--lime); animation: blink 1.6s ease-in-out infinite; }
+  .season[data-state="over"] { opacity: .75; }
+  @keyframes blink { 50% { opacity: .35; } }
+  @media (max-width: 380px) { .season { font-size: 10px; letter-spacing: .1em; } }
+
   .statsTitle { font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; font-weight: 900;
     color: var(--green); opacity: .7; margin: 4px 0 -4px 6px; }
   .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -131,6 +143,9 @@
     box-shadow: 0 8px 22px rgba(227,255,150,.55); font-size: 14px; padding: 13px 18px; }
   .btn.taste:hover { background: #eeffb0; }
   .btn.taste .arrow { font-size: 15px; transition: transform .16s ease; }
+  .btn:disabled { opacity: .55; cursor: default; transform: none !important; }
+  #shareBtn i { font-style: normal; font-size: 15px; }
+  .sheet .btn.taste { margin-top: 10px; }
   .btn.taste:hover .arrow { transform: translate(2px,-2px); }
   .btnRow { display: flex; gap: 9px; }
   .btnRow .btn { flex: 1; }
@@ -157,6 +172,11 @@
     text-transform: uppercase; font-weight: 900; text-shadow: none; white-space: nowrap;
     box-shadow: 0 6px 16px rgba(0,85,68,.25); }
   #pacePill.pop { animation: pillPop .7s cubic-bezier(.2,1.4,.4,1); }
+  #stageLine { margin: 10px auto 0; max-width: min(340px, 78vw); font-family: var(--display); font-weight: 900;
+    font-size: 17px; line-height: 1.25; color: var(--green); opacity: 0; transform: translateY(-6px);
+    transition: opacity .35s ease, transform .35s ease; text-wrap: balance; white-space: normal;
+    text-shadow: 0 2px 14px rgba(255,255,255,.9); }
+  #stageLine.show { opacity: 1; transform: translateY(0); }
   @keyframes pillPop { 0% { transform: scale(.8); background: var(--lime); color: var(--green); }
     35% { transform: scale(1.14); } 100% { transform: scale(1); } }
   #comboWrap { position: absolute; top: max(16px, env(safe-area-inset-top)); right: 16px; text-align: right;
@@ -274,6 +294,7 @@
       <img class="logo" src="./assets/img/sweetango-logo.svg" alt="SweeTango Apples">
       <h1 id="titleText">Crunch Time</h1>
       <div class="tag" id="tagText"></div>
+      <div class="season" id="season" data-state="now"></div>
 
       <div class="statsTitle" id="statsTitle">Your Crunch Stats</div>
       <div class="stats">
@@ -334,6 +355,7 @@
       <div id="scoreVal">0</div>
       <div class="b" id="hudBest">Best 0</div>
       <div id="pacePill">Warm-up · Crisp</div>
+      <div id="stageLine"></div>
     </div>
     <div id="comboWrap">
       <div class="k" id="kCombo">COMBO</div>
@@ -363,9 +385,13 @@
         <button class="btn" id="againBtn">BITE AGAIN</button>
       </div>
       <div class="btnRow">
+        <button class="btn ghost" id="shareBtn" disabled><i aria-hidden="true">⇪</i><span>SHARE</span></button>
         <button class="btn ghost" id="backBtn">HOME</button>
       </div>
-      <div class="craving"><span id="cravingText"></span><a id="tasteLink" href="https://sweetango.com/" target="_blank" rel="noopener">TASTE SWEETANGO</a> ↗</div>
+      <a class="btn taste" id="findBtn" href="https://sweetango.com/where-to-buy/" target="_blank" rel="noopener" hidden>
+        <span>FIND SWEETANGO NEAR YOU</span><i class="arrow" aria-hidden="true">↗</i>
+      </a>
+      <div class="craving" id="cravingRow"><span id="cravingText"></span><a id="tasteLink" href="https://sweetango.com/" target="_blank" rel="noopener">TASTE SWEETANGO</a> ↗</div>
     </div>
   </section>
 

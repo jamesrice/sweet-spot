@@ -34,7 +34,14 @@ npm run dev            # http://localhost:8799
 - **M** — mute · **⌂** — bail out to the home screen
 - **How to Play** on the home screen replays the three-slide tutorial any time
 - **TASTE SWEETANGO** on the home screen (and a small link on the results
-  sheet) opens sweetango.com in a new tab
+  sheet) opens sweetango.com in a new tab. Beat your best and the results
+  sheet swaps that link for **FIND SWEETANGO NEAR YOU** → the store locator
+- **SHARE** on the results sheet hands a 1080×1920 Story card (score, stage
+  gradient, props, logo) to the OS share sheet; where files can't be shared
+  it downloads the PNG. See `js/share.js`
+- The home screen counts down to the season (`SEASON` in `js/style.js` —
+  update the dates each year) and celebrates while it's on
+- Phones that support it get a short buzz per bite, a longer one on perfects
 
 ### One pace that turns into two
 
@@ -49,7 +56,8 @@ the spot by 0.962, until it is running at the old expert ceiling (8.5 rad/s,
 
 Every **7 bites** the scene turns over: the background gradient crossfades,
 the two floating props swap (only two ever show at once), the sweet spot takes
-the stage's colour, and a short riser plays.
+the stage's colour, a short riser plays, and a line of SweeTango's own
+tasting copy appears under the pace pill (`MILESTONES` in `js/style.js`).
 
 | Stage | Gradient | Props |
 |---|---|---|
@@ -132,8 +140,9 @@ for (let i = 0; i < 20000 && L.state === 'live'; i++) { n += 16; L.last = n - 16
 ## Notes
 
 - **Audio** is 100% synthesized in `js/audio.js` — no samples. Every bite is a
-  bandpassed-noise *crunch* with a crackle tail and a low thump; good bites add
-  a marimba pluck, perfects add a two-note bell that climbs a pentatonic ladder
+  *crunch*: a bright snap, a run of eight irregular noise grains as the flesh
+  fractures, a lowpassed chew and a low thump. Normal bites add a quiet marimba
+  pluck, perfects add a two-note bell that climbs a pentatonic ladder
   with the combo and then holds. Stage changes get a four-note riser, a new
   best gets a bell fanfare, and run-over is a bonk-and-wah. The AudioContext is
   created inside the first gesture so iOS lets it through.
@@ -141,12 +150,10 @@ for (let i = 0; i < 20000 && L.state === 'live'; i++) { n += 16; L.last = n - 16
   so it keeps running in hosts that starve animation frames.
 - `js/style.js` holds every colour, stage, lingo word and difficulty constant —
   tuning the game is a data change. `strings.js` holds every visible string.
-- **Fonts:** Gilroy (400/500/700/900) and Recoleta (700/900) are licensed
-  commercial webfonts. The Gilroy files are Fiction Tribe's; the Recoleta files
-  and Gilroy Black are the MyFonts webfont kit SweeTango's own site serves.
-  Confirm the client is happy for their kit to be served from this domain — if
-  not, delete the Recoleta files and Fraunces (Google Fonts) stands in through
-  the font stack.
+- **Fonts:** Gilroy (400/500/700/900) and Recoleta (700/900) are the same
+  licensed webfonts sweetango.com serves. Use here is approved by the client
+  (Fiction Tribe is SweeTango's brand and digital agency). If the files are
+  ever pulled, Fraunces (Google Fonts) stands in through the font stack.
 - **Props** are the six `home/*.webp` renders from sweetango.com's 2026 theme.
   The favicon is the site's own.
 - **Trademark:** the footer carries "SweeTango® is a registered trademark of

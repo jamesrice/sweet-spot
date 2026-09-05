@@ -1,12 +1,13 @@
 // Crunch Time sound — everything is synthesized in WebAudio, no samples.
 //
-// The signature is the *crunch*: a bandpassed noise burst with a crackle tail
-// and a low thump, which reads as an apple bite at any volume. Good bites add
-// a soft marimba pluck; PERFECT bites add a two-note bell that climbs a
-// pentatonic ladder with the combo and then holds, so it stays a reward and
-// never turns into an alarm. Stage changes get a four-note riser, a new best
-// gets a bell fanfare, and the run-over is a bonk-and-wah — a wince, not a
-// punishment.
+// The signature is the *crunch*. A bite isn't one noise burst: it's a sharp
+// snap as the skin breaks, then a fast run of grains as the flesh fractures,
+// over a low thump and a short lowpassed "chew". Every good bite plays it,
+// loud and up front. Normal bites add a quiet marimba pluck underneath;
+// PERFECT bites add a two-note bell that climbs a pentatonic ladder with the
+// combo and then holds, so it stays a reward and never turns into an alarm.
+// Stage changes get a four-note riser, a new best a bell fanfare, and the
+// run-over is a bonk-and-wah — a wince, not a punishment.
 //
 // The AudioContext is created lazily inside a user gesture (the first tap or
 // button press) so iOS lets it through.
@@ -25,10 +26,10 @@ export const Sfx = {
     if (!this.ctx) {
       this.ctx = new Ctx();
       const comp = this.ctx.createDynamicsCompressor();
-      comp.threshold.value = -14; comp.knee.value = 18; comp.ratio.value = 6;
-      comp.attack.value = 0.003; comp.release.value = 0.12;
+      comp.threshold.value = -12; comp.knee.value = 16; comp.ratio.value = 5;
+      comp.attack.value = 0.002; comp.release.value = 0.14;
       const out = this.ctx.createGain();
-      out.gain.value = 0.9;
+      out.gain.value = 1.0;
       comp.connect(out).connect(this.ctx.destination);
       this.master = comp;
     }
@@ -38,6 +39,10 @@ export const Sfx = {
 
   // Call from any user gesture so the context exists before the first bite.
   unlock() { try { this.ctxGet(); } catch (e) { /* no audio */ } },
+
+  // Scheduling origin: if the context is still resuming, push the cue a hair
+  // into the future so nothing lands before the clock starts.
+  t0(ctx) { return ctx.currentTime + (ctx.state === "running" ? 0 : 0.03); },
 
   noise(ctx) {
     if (!this.noiseBuf) {
@@ -57,34 +62,49 @@ export const Sfx = {
 
   // --- building blocks -----------------------------------------------------
 
-  crunch(ctx, t, { gain = 0.5, tone = 1800, dur = 0.13, lp = 0 } = {}) {
-    const mk = (start, freq, q, peak, len) => {
-      const src = ctx.createBufferSource();
-      src.buffer = this.noise(ctx);
-      const bp = ctx.createBiquadFilter();
-      bp.type = "bandpass"; bp.frequency.value = freq; bp.Q.value = q;
-      const g = ctx.createGain();
-      this.env(ctx, g, start, peak, len, 0.002);
-      let tail = bp;
-      if (lp) {
-        const f = ctx.createBiquadFilter();
-        f.type = "lowpass"; f.frequency.value = lp;
-        bp.connect(f); tail = f;
-      }
-      src.connect(bp); tail.connect(g).connect(this.master);
-      src.start(start); src.stop(start + len + 0.03);
-    };
-    mk(t, tone, 0.7, gain, dur);                       // the bite
-    mk(t + 0.035, tone * 2.1, 1.2, gain * 0.45, dur * 0.55); // crackle
-    // thump
+  // One filtered noise grain.
+  grain(ctx, start, freq, q, peak, len, lp = 0) {
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise(ctx);
+    src.playbackRate.value = 0.9 + Math.random() * 0.3;
+    const bp = ctx.createBiquadFilter();
+    bp.type = "bandpass"; bp.frequency.value = freq; bp.Q.value = q;
+    const g = ctx.createGain();
+    this.env(ctx, g, start, peak, len, 0.0015);
+    let tail = bp;
+    if (lp) {
+      const f = ctx.createBiquadFilter();
+      f.type = "lowpass"; f.frequency.value = lp;
+      bp.connect(f); tail = f;
+    }
+    src.connect(bp); tail.connect(g).connect(this.master);
+    src.start(start); src.stop(start + len + 0.03);
+  },
+
+  // The bite. `gain` ~0.5–0.8. `tone` sets how bright the snap is.
+  crunch(ctx, t, { gain = 0.7, tone = 1500, dur = 0.19, lp = 0 } = {}) {
+    // 1. Snap — the skin breaking. Bright, wide, short.
+    this.grain(ctx, t, tone * 1.6, 0.55, gain, 0.06, lp);
+    this.grain(ctx, t, tone * 4.2, 0.9, gain * 0.5, 0.035, lp);
+    // 2. Fracture — a run of 8 grains, each darker and quieter, irregularly
+    //    spaced. This is what reads as "crunch" rather than "click".
+    let at = t + 0.014;
+    for (let i = 0; i < 8; i++) {
+      const fall = Math.pow(0.8, i);
+      this.grain(ctx, at, tone * (0.7 + Math.random() * 1.9), 1.6 + Math.random(), gain * 0.62 * fall, 0.03 + Math.random() * 0.025, lp);
+      at += 0.011 + Math.random() * 0.012;
+    }
+    // 3. Chew — a lowpassed body under the grains.
+    this.grain(ctx, t + 0.008, 420, 0.6, gain * 0.5, dur, lp || 1100);
+    // 4. Thump — the jaw.
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.type = "sine";
-    o.frequency.setValueAtTime(150, t);
-    o.frequency.exponentialRampToValueAtTime(55, t + 0.09);
-    this.env(ctx, g, t, gain * 0.7, 0.11, 0.003);
+    o.frequency.setValueAtTime(170, t);
+    o.frequency.exponentialRampToValueAtTime(48, t + 0.1);
+    this.env(ctx, g, t, gain * 0.9, 0.13, 0.003);
     o.connect(g).connect(this.master);
-    o.start(t); o.stop(t + 0.14);
+    o.start(t); o.stop(t + 0.16);
   },
 
   // Bell with inharmonic partials so it rings like metal, not a sine beep.
@@ -124,16 +144,16 @@ export const Sfx = {
     if (this.muted) return;
     try {
       const ctx = this.ctxGet(); if (!ctx) return;
-      const t = ctx.currentTime;
+      const t = this.t0(ctx);
       if (perfect) {
-        this.crunch(ctx, t, { gain: 0.42, tone: 2000, dur: 0.12 });
+        this.crunch(ctx, t, { gain: 0.66, tone: 1700 });
         const step = PENT[Math.min(Math.max(combo - 1, 0), PENT.length - 1)];
         const root = 659.25 * Math.pow(2, step / 12); // E5 upward
-        this.bell(ctx, t + 0.01, root, 0.10, 0.85);
-        this.bell(ctx, t + 0.075, root * 1.25, 0.07, 0.6); // major third on top
+        this.bell(ctx, t + 0.03, root, 0.09, 0.85);
+        this.bell(ctx, t + 0.095, root * 1.25, 0.06, 0.6); // major third on top
       } else {
-        this.crunch(ctx, t, { gain: 0.5, tone: 1700 + Math.random() * 300, dur: 0.14 });
-        this.pluck(ctx, t + 0.01, 392 * (0.98 + Math.random() * 0.04), 0.06, 0.17);
+        this.crunch(ctx, t, { gain: 0.74, tone: 1400 + Math.random() * 300 });
+        this.pluck(ctx, t + 0.02, 392 * (0.98 + Math.random() * 0.04), 0.04, 0.16);
       }
     } catch (e) { /* the run carries on without sound */ }
   },
@@ -143,7 +163,7 @@ export const Sfx = {
     if (this.muted) return;
     try {
       const ctx = this.ctxGet(); if (!ctx) return;
-      const t = ctx.currentTime + 0.12; // let the bite land first
+      const t = this.t0(ctx) + 0.16; // let the bite land first
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => this.pluck(ctx, t + i * 0.085, f, 0.075, 0.3));
       this.bell(ctx, t + 0.34, 1318.5, 0.06, 0.7);
     } catch (e) { /* silent */ }
@@ -154,7 +174,7 @@ export const Sfx = {
     if (this.muted) return;
     try {
       const ctx = this.ctxGet(); if (!ctx) return;
-      const t = ctx.currentTime;
+      const t = this.t0(ctx);
       const o = ctx.createOscillator();
       const g = ctx.createGain();
       o.type = "sine";
@@ -163,7 +183,7 @@ export const Sfx = {
       this.env(ctx, g, t, 0.14, 0.45, 0.004);
       o.connect(g).connect(this.master);
       o.start(t); o.stop(t + 0.5);
-      this.crunch(ctx, t + 0.03, { gain: 0.42, tone: 700, dur: 0.22, lp: 900 });
+      this.crunch(ctx, t + 0.03, { gain: 0.5, tone: 700, dur: 0.22, lp: 900 });
       // wah-wah: sawtooth through a sweeping lowpass
       const w = ctx.createOscillator();
       const wf = ctx.createBiquadFilter();
@@ -187,7 +207,7 @@ export const Sfx = {
     if (this.muted) return;
     try {
       const ctx = this.ctxGet(); if (!ctx) return;
-      const t = ctx.currentTime + 0.05;
+      const t = this.t0(ctx) + 0.05;
       [659.25, 783.99, 987.77, 1318.5].forEach((f, i) => this.bell(ctx, t + i * 0.11, f, 0.085, i === 3 ? 1.3 : 0.5));
       this.bell(ctx, t + 0.33, 1318.5 * 1.5, 0.05, 1.1);
     } catch (e) { /* silent */ }
@@ -198,7 +218,7 @@ export const Sfx = {
     if (this.muted) return;
     try {
       const ctx = this.ctxGet(); if (!ctx) return;
-      this.pluck(ctx, ctx.currentTime, 1046.5, 0.035, 0.06);
+      this.pluck(ctx, this.t0(ctx), 1046.5, 0.035, 0.06);
     } catch (e) { /* silent */ }
   },
 };

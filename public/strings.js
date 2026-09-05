@@ -6,7 +6,16 @@ export const STR = {
   play: "PLAY",
   taste: "TASTE SWEETANGO",
   tasteUrl: "https://sweetango.com/",
+  findUrl: "https://sweetango.com/where-to-buy/",
   craving: "Craving the real thing?",
+  findNearYou: "FIND SWEETANGO NEAR YOU",
+  siteLabel: "sweetango.com",
+
+  // Season countdown on the home screen. {n} is the day count.
+  seasonSoon: "Crunch Time starts in {n} days",
+  seasonTomorrow: "Crunch Time starts tomorrow",
+  seasonNow: "It's Crunch Time — SweeTango is in season",
+  seasonOver: "Season's over — back late summer",
 
   statsTitle: "Your Crunch Stats",
   statBest: "Best score",
@@ -26,6 +35,11 @@ export const STR = {
   perfects: "Perfects",
   again: "BITE AGAIN",
   home: "Home",
+  share: "SHARE",
+  shareTitle: "Crunch Time",
+  shareText: "I scored {s} in Crunch Time — {b} bites of SweeTango. No Ordinary Apple. One Bite. Timing Matters.",
+  shared: "SHARED!",
+  saved: "SAVED!",
 
   howToPlay: "HOW TO PLAY",
   lbTitle: "Crunch Legends",

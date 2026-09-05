@@ -79,3 +79,19 @@ export const SCORE = {
 
 // Bite confetti — flesh, skin, leaf, and the current stage colour.
 export const BITE_BITS = [PAL.flesh, PAL.flesh, PAL.flesh, PAL.red, PAL.redBright, PAL.leaf, PAL.lime];
+
+// SweeTango is a short-season apple. The home screen counts down to
+// SEASON.start, celebrates while it's on, and rests after SEASON.end.
+// Update both dates each year (ISO, local time).
+export const SEASON = { start: "2026-09-01", end: "2026-11-30" };
+
+// A beat of the site's tasting copy shown under the pace pill each time a
+// stage turns over (index = stage index; cycles with the stages).
+export const MILESTONES = [
+  "Still crunching? Legend.",                            // back to Crisp after a full cycle
+  "Big crunch. Sweet bite.",                              // → Zesty (7)
+  "Finishes with a zing.",                                // → Honey Sweet (14)
+  "The kind of fruit that turns a snack into a moment.",  // → Zingy (21)
+  "One bite and you'll get it.",                          // → Brown Sugary (28)
+  "No ordinary apple.",                                   // → One-of-a-kind (35)
+];
