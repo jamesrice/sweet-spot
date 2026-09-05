@@ -147,9 +147,9 @@ for (let i = 0; i < 20000 && L.state === 'live'; i++) { n += 16; L.last = n - 16
   meter — if the meter moves and you hear nothing, it's the switch, the
   volume, or a Bluetooth route, not the code.
 - **Audio** is 100% synthesized in `js/audio.js` — no samples. Every bite is a
-  *crunch*: a bright snap, a run of eight irregular noise grains as the flesh
-  fractures, a lowpassed chew and a low thump. Normal bites add a quiet marimba
-  pluck, perfects add a two-note bell that climbs a pentatonic ladder
+  *crunch*: a bright snap, a run of fourteen irregular high noise grains as
+  the flesh fractures, and a crisp tail — no bass, by design. Normal bites
+  are just the crunch; perfects add a two-note bell that climbs a pentatonic ladder
   with the combo and then holds. Stage changes get a four-note riser, a new
   best gets a bell fanfare, and run-over is a bonk-and-wah. The AudioContext is
   created inside the first gesture so iOS lets it through.

@@ -1,9 +1,9 @@
 // Sweet Spot sound — everything is synthesized in WebAudio, no samples.
 //
 // The signature is the *crunch*. A bite isn't one noise burst: it's a sharp
-// snap as the skin breaks, then a fast run of grains as the flesh fractures,
-// over a low thump and a short lowpassed "chew". Every good bite plays it,
-// loud and up front. Normal bites add a quiet marimba pluck underneath;
+// snap as the skin breaks, then a fast run of bright grains as the flesh
+// fractures, with a crisp tail — and deliberately no low end, which is what
+// turns a crunch into a thud. Every good bite plays just that;
 // PERFECT bites add a two-note bell that climbs a pentatonic ladder with the
 // combo and then holds, so it stays a reward and never turns into an alarm.
 // Stage changes get a four-note riser, a new best a bell fanfare, and the
@@ -148,30 +148,38 @@ export const Sfx = {
     src.start(start); src.stop(start + len + 0.03);
   },
 
-  // The bite. `gain` ~0.5–0.8. `tone` sets how bright the snap is.
-  crunch(ctx, t, { gain = 0.7, tone = 1500, dur = 0.19, lp = 0 } = {}) {
-    // 1. Snap — the skin breaking. Bright, wide, short.
-    this.grain(ctx, t, tone * 1.6, 0.55, gain, 0.06, lp);
-    this.grain(ctx, t, tone * 4.2, 0.9, gain * 0.5, 0.035, lp);
-    // 2. Fracture — a run of 8 grains, each darker and quieter, irregularly
-    //    spaced. This is what reads as "crunch" rather than "click".
-    let at = t + 0.014;
-    for (let i = 0; i < 8; i++) {
-      const fall = Math.pow(0.8, i);
-      this.grain(ctx, at, tone * (0.7 + Math.random() * 1.9), 1.6 + Math.random(), gain * 0.62 * fall, 0.03 + Math.random() * 0.025, lp);
-      at += 0.011 + Math.random() * 0.012;
+  // The bite. Apples are bright and dry: the energy sits between 2 and 8 kHz
+  // as dozens of tiny fractures, with almost nothing below 500 Hz. Anything
+  // low and sweeping reads as a thud (or worse), so there is no sub thump —
+  // just a snap, a fast irregular run of crackle grains, and a crisp tail.
+  // `tone` is the centre of the crackle (~3 kHz); `lp` muffles it for the
+  // game-over bonk; `knock` adds a short mid-range transient for weight.
+  crunch(ctx, t, { gain = 0.7, tone = 3000, dur = 0.14, lp = 0, knock = 1 } = {}) {
+    // 1. Snap — the skin giving way. Two very short bright bursts.
+    this.grain(ctx, t, tone * 1.3, 0.8, gain * 1.1, 0.024, lp);
+    this.grain(ctx, t + 0.003, tone * 2.3, 1.1, gain * 0.7, 0.018, lp);
+    // 2. Fracture — 14 grains over ~130 ms, each a different pitch, fading
+    //    and irregularly spaced. This is the crackle that says "apple".
+    let at = t + 0.009;
+    for (let i = 0; i < 14; i++) {
+      const fall = Math.pow(0.86, i);
+      this.grain(ctx, at, tone * (0.75 + Math.random() * 1.6), 2.2 + Math.random() * 2.2,
+        gain * 0.9 * fall, 0.007 + Math.random() * 0.013, lp);
+      at += 0.005 + Math.random() * 0.011;
     }
-    // 3. Chew — a lowpassed body under the grains.
-    this.grain(ctx, t + 0.008, 420, 0.6, gain * 0.5, dur, lp || 1100);
-    // 4. Thump — the jaw.
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.setValueAtTime(170, t);
-    o.frequency.exponentialRampToValueAtTime(48, t + 0.1);
-    this.env(ctx, g, t, gain * 0.9, 0.13, 0.003);
-    o.connect(g).connect(this.master);
-    o.start(t); o.stop(t + 0.16);
+    // 3. Crisp tail — a quiet, wide, high wash that decays with the bite.
+    this.grain(ctx, t + 0.015, tone * 1.5, 0.5, gain * 0.28, dur, lp);
+    // 4. Knock — a 30 ms mid-range transient (no bass) so it has some body.
+    if (knock) {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "triangle";
+      o.frequency.setValueAtTime(1100, t);
+      o.frequency.exponentialRampToValueAtTime(640, t + 0.03);
+      this.env(ctx, g, t, gain * 0.22 * knock, 0.04, 0.002);
+      o.connect(g).connect(this.master);
+      o.start(t); o.stop(t + 0.06);
+    }
   },
 
   // Bell with inharmonic partials so it rings like metal, not a sine beep.
@@ -213,14 +221,15 @@ export const Sfx = {
       const ctx = this.ctxGet(); if (!ctx) return;
       const t = this.t0(ctx);
       if (perfect) {
-        this.crunch(ctx, t, { gain: 0.66, tone: 1700 });
+        this.crunch(ctx, t, { gain: 0.78, tone: 3300 });
         const step = PENT[Math.min(Math.max(combo - 1, 0), PENT.length - 1)];
         const root = 659.25 * Math.pow(2, step / 12); // E5 upward
         this.bell(ctx, t + 0.03, root, 0.09, 0.85);
         this.bell(ctx, t + 0.095, root * 1.25, 0.06, 0.6); // major third on top
       } else {
-        this.crunch(ctx, t, { gain: 0.74, tone: 1400 + Math.random() * 300 });
-        this.pluck(ctx, t + 0.02, 392 * (0.98 + Math.random() * 0.04), 0.04, 0.16);
+        // A good bite is just the crunch — no note under it. A little pitch
+        // variation keeps twenty in a row from sounding like a sample.
+        this.crunch(ctx, t, { gain: 1.0, tone: 2700 + Math.random() * 900 });
       }
     } catch (e) { /* the run carries on without sound */ }
   },
@@ -250,7 +259,7 @@ export const Sfx = {
       this.env(ctx, g, t, 0.14, 0.45, 0.004);
       o.connect(g).connect(this.master);
       o.start(t); o.stop(t + 0.5);
-      this.crunch(ctx, t + 0.03, { gain: 0.5, tone: 700, dur: 0.22, lp: 900 });
+      this.crunch(ctx, t + 0.03, { gain: 0.55, tone: 1400, dur: 0.22, lp: 900, knock: 0 });
       // wah-wah: sawtooth through a sweeping lowpass
       const w = ctx.createOscillator();
       const wf = ctx.createBiquadFilter();
